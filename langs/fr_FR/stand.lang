@@ -1,0 +1,118 @@
+# Copyright (C) 2022 Mikael Carlavan <contact@mika-carl.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#
+# Générique
+#
+
+# Module label 'ModuleStandName'
+ModuleStandName = Stations à vélo
+# Module description 'ModuleStandDesc'
+ModuleStandDesc = Module permettant de gérer les stations à vélo
+
+#
+# Page d'administration
+#
+StandSetup = Configuration du module
+Settings = Réglages
+StandSetupPage = Page de réglage du module
+StandOptions = Options
+Description = Description
+Value = Valeur
+Action = Action
+StandsNumberingModules = Modèle de numérotation de stands
+NextValue=Prochaine valeur
+NoDescription=Aucune description
+NoExample=Aucun exemple
+NotAvailable=Non disponible
+Stand = Stand
+Extrafields = Attributs supplémentaires
+
+#
+# Page À propos
+#
+About = À propos
+StandAbout = À propos du module
+StandAboutPage = Page à propos du module
+StandAboutDescLong = Ce module a été développé par <a href="http://www.mikael-carlavan.fr">Mikael Carlavan</a> pour <a href="https://veloma.org">Véloma</a>.
+
+# ChangeLog
+ChangeLog = ChangeLog
+ChangeLogVersion = Version
+ChangeLogDate = Date
+ChangeLogUpdates = Modification apportées
+StandFirstVersion = Première version
+
+#
+Stands = Stations à vélo
+StandsList = Liste
+ListeStands = Liste des stations
+StandsNew = Nouvelle station
+StandsArea = Espace stations
+NoStand = Aucune station
+LastModifiedStands = Les %d derniers stations modifiées
+#
+NewStand = Nouvelle station
+CreateStand = Créer station
+ShowStand = Voir la station
+StandCard = Station
+Info = Suivi
+Ref = Réf.
+StandName = Nom
+StandDescription = Description
+StandAddress = Adresse
+StandTown = Ville
+StandZip = Code postal
+StandLongitude = Longitude
+StandLatitude = Latitude
+DateCreation = Date de création
+DateModificationShort = Date de modif.
+UserAuthorId = Utilisateur
+ListOfStands = Liste des stations
+CreatedByUsers = Utilisateurs
+NumOfStands = Nombre de stations
+StandPeriod = Période
+StandMonth = Mois
+StandYear = Année
+StandAlreadyExists = La station existe déjà
+#
+MassActionDelete = Supprimer
+DeleteStand = Supprimer
+ValidateStand = Valider
+SelectStand = Merci de sélectionner une station
+ConfirmDeleteStand = Êtes-vous sûr de vouloir effacer cette station ?
+ConfirmValidateStand = Êtes-vous sûr de vouloir valider cette station ?
+SearchIntoStands = Stands
+SendStandRef = Envoi de la station
+ConfirmUnvalidateStand=Êtes-vous sûr de vouloir restaurer la station <b>%s</b> au statut brouillon ?
+UnvalidateStand=Modifier la station
+#
+StandStatusValidated = Validée
+StandStatusValidatedShort = Validée
+StandStatusDraft = Brouillon
+StandStatusDraftShort = Brouillon
+StandStatus = Statut
+
+#
+StandUserNotFound = Le compte utilisateur n'a pas été trouvé
+AccessNotAllowed = Cette action ne vous est pas autorisée.
+StandNotFound = La station n'a pas été trouvée.
+ErrorWhileRetrievingStandList = Erreur lors de la récupération de la liste des stations.
+ErrorWhileCreatingStand = Erreur lors de la création de la station.
+ErrorWhileUpdatingStand = Erreur lors de la mise à jour de la station.
+StandHasBeenCreated = Votre station %s a bien été enregistrée.
+StandAlreadyExists = Une station avec cette référence existe déjà.
+
+

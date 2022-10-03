@@ -137,6 +137,20 @@ if (empty($reshook))
 			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
+    else if ($action == 'enable' && !GETPOST('cancel','alpha'))
+    {
+        $object->active = 1;
+        $result = $object->update($user);
+
+        if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
+    }
+    else if ($action == 'disable' && !GETPOST('cancel','alpha'))
+    {
+        $object->active = 0;
+        $result = $object->update($user);
+
+        if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
+    }
 	else if ($action == 'setname' && !GETPOST('cancel','alpha'))
 	{
 		$object->name = GETPOST('name', 'alpha');
@@ -570,16 +584,18 @@ if ($action == 'create' && $user->rights->stand->creer)
 		// modified by hook
 		if (empty($reshook)) {
 
-
-            // Valid
-            if ($object->fk_statut == Stand::STATUS_DRAFT && $user->rights->stand->creer) {
-                print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=validate">'.$langs->trans('Validate').'</a>';
+            // Activate
+            if (!$object->active && $user->rights->stand->creer) {
+                print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=enable">'.$langs->trans('StandActivate').'</a>';
             }
-            // Edit
-            if ($object->fk_statut == Stand::STATUS_VALIDATED && $user->rights->stand->creer) {
-                print '<a class="butAction" href="card.php?id='.$object->id.'&amp;action=modif">'.$langs->trans('Modify').'</a>';
+            // Deactivate
+            if ($object->active && $user->rights->stand->creer) {
+                print '<a class="butAction" href="card.php?id='.$object->id.'&amp;action=disable">'.$langs->trans('StandDeactivate').'</a>';
             }
-
+            // Delete
+            if ($user->rights->stand->supprimer) {
+                print '<div class="inline-block divButAction"><a class="butActionDelete" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=delete">' . $langs->trans('DeleteStand') . '</a></div>';
+            }
 		}
 
 		print '</div>';

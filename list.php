@@ -29,7 +29,6 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formother.class.php';
 
 dol_include_once("/stand/class/stand.class.php");
-dol_include_once("/stand/class/html.form.stand.class.php");
 
 $langs->load("stand@stand");
 
@@ -52,8 +51,6 @@ $search_description = GETPOST('search_description');
 $search_address = GETPOST('search_address');
 $search_town = GETPOST('search_town');
 $search_zip = GETPOST('search_zip');
-
-$search_status = isset($_POST['search_status']) || isset($_GET['search_status']) ? GETPOST('search_status', 'int') : -1;
 
 $sall = trim((GETPOST('search_all', 'alphanohtml') != '') ? GETPOST('search_all', 'alphanohtml') : GETPOST('sall', 'alphanohtml'));
 
@@ -107,7 +104,7 @@ $arrayfields = array(
     'e.latitude' => array('label' => $langs->trans("StandLatitude"), 'checked' => 0),
     'e.datec' => array('label' => $langs->trans("DateCreation"), 'checked' => 1),
     'e.tms' => array('label' => $langs->trans("DateModificationShort"), 'checked' => 0, 'position' => 500),
-    'e.fk_statut' => array('label' => $langs->trans("StandStatus"), 'checked' => 1, 'position' => 1000),
+    'e.active' => array('label' => $langs->trans("StandActive"), 'checked' => 1, 'position' => 1000),
 );
 
 // Extra fields
@@ -137,6 +134,25 @@ if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'e
 if (empty($reshook)) {
     // Selection of new fields
     include DOL_DOCUMENT_ROOT . '/core/actions_changeselectedfields.inc.php';
+
+    if ($action == 'enable' && !GETPOST('cancel','alpha'))
+    {
+        $object->fetch($id);
+
+        $object->active = 1;
+        $result = $object->update($user);
+
+        if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
+    }
+    else if ($action == 'disable' && !GETPOST('cancel','alpha'))
+    {
+        $object->fetch($id);
+
+        $object->active = 0;
+        $result = $object->update($user);
+
+        if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
+    }
 
     // Purge search criteria
     if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) // All tests are required to be compatible with all browsers
@@ -188,7 +204,6 @@ $now = dol_now();
 
 $form = new Form($db);
 $formother = new FormOther($db);
-$standform = new StandForm($db);
 
 $userstatic = new User($db);
 
@@ -197,7 +212,7 @@ $help_url = "";
 
 $sql = 'SELECT';
 if ($sall) $sql = 'SELECT DISTINCT';
-$sql .= " e.rowid, e.ref, e.datec, e.name, e.description, e.address, e.zip, e.town, e.latitude, e.longitude, e.user_author_id, e.entity, e.tms, e.fk_statut ";
+$sql .= " e.rowid, e.ref, e.active, e.datec, e.name, e.description, e.address, e.zip, e.town, e.latitude, e.longitude, e.user_author_id, e.entity, e.tms ";
 
 // Add fields from extrafields
 foreach ($extrafields->attribute_label as $key => $val) $sql .= ($extrafields->attribute_type[$key] != 'separate' ? ",ef." . $key . ' as options_' . $key : '');
@@ -233,7 +248,6 @@ if ($search_town) $sql .= natural_search('e.town', $search_town);
 
 
 if ($search_user_author_id > 0) $sql .= " AND e.user_author_id = " . $search_user_author_id;
-if ($search_status >= 0) $sql .= " AND e.fk_statut = " . $search_status;
 
 // Add where from extra fields
 include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_list_search_sql.tpl.php';
@@ -450,10 +464,8 @@ if ($resql) {
         print '</td>';
     }
 
-    if (!empty($arrayfields['e.fk_statut']['checked'])) {
-        print '<td class="liste_titre">';
-        print $standform->select_status($search_status, 'search_status', '', true);
-        print '</td>';
+    if (!empty($arrayfields['e.active']['checked'])) {
+        print '<td class="liste_titre">&nbsp;</td>';
     }
 
     // Action column
@@ -484,7 +496,7 @@ if ($resql) {
 
     if (!empty($arrayfields['e.datec']['checked'])) print_liste_field_titre($arrayfields['e.datec']['label'], $_SERVER["PHP_SELF"], 'e.datec', '', $param, '', $sortfield, $sortorder);
     if (!empty($arrayfields['e.tms']['checked'])) print_liste_field_titre($arrayfields['e.tms']['label'], $_SERVER["PHP_SELF"], "e.tms", "", $param, 'align="left" class="nowrap"', $sortfield, $sortorder);
-    if (!empty($arrayfields['e.fk_statut']['checked'])) print_liste_field_titre($arrayfields['e.fk_statut']['label'], $_SERVER["PHP_SELF"], "e.fk_statut", "", $param, 'align="left" class="nowrap"', $sortfield, $sortorder);
+    if (!empty($arrayfields['e.active']['checked'])) print_liste_field_titre($arrayfields['e.active']['label'], $_SERVER["PHP_SELF"], "e.active", "", $param, 'align="left" class="nowrap"', $sortfield, $sortorder);
 
     print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', $param, 'align="center"', $sortfield, $sortorder, 'maxwidthsearch ');
     print '</tr>' . "\n";
@@ -505,10 +517,6 @@ if ($resql) {
         $generic_stand->id = $obj->rowid;
         $generic_stand->ref = $obj->ref;
         $generic_stand->datec = $db->jdate($obj->datec);
-        $generic_stand->fk_statut = $obj->fk_statut;
-
-        $generic_thirdparty->id = $obj->thirdparty_id;
-        $generic_thirdparty->name = $obj->thirdparty_name;
 
 
         print '<tr class="oddeven">';
@@ -600,9 +608,19 @@ if ($resql) {
             if (!$i) $totalarray['nbfield']++;
         }
 
-        // Status
-        if (!empty($arrayfields['e.fk_statut']['checked'])) {
-            print '<td class="nowrap right">' . $generic_stand->getLibStatut(5) . '</td>';
+        // Activated or not
+        if (!empty($arrayfields['e.active']['checked'])) {
+            print '<td class="center">';
+            if (empty($obj->active)) {
+                print '<a class="reposition" href="'.$_SERVER["PHP_SELF"].'?id='.$obj->rowid.'&action=enable&mode=0&token='.newToken().'">';
+                print img_picto($langs->trans("Disabled"), 'switch_off');
+                print '</a>';
+            } else {
+                print '<a class="reposition" href="'.$_SERVER["PHP_SELF"].'?id='.$obj->rowid.'&action=disable&mode=0&token='.newToken().'">';
+                print img_picto($langs->trans("Activated"), 'switch_on');
+                print '</a>';
+            }
+            print '</td>';
             if (!$i) $totalarray['nbfield']++;
         }
 

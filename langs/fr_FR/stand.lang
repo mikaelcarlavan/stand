@@ -70,6 +70,7 @@ ShowStand = Voir la station
 StandCard = Station
 Info = Suivi
 Ref = Réf.
+StandActive = Actif
 StandName = Nom
 StandDescription = Description
 StandAddress = Adresse
@@ -88,6 +89,8 @@ StandMonth = Mois
 StandYear = Année
 StandAlreadyExists = La station existe déjà
 #
+StandDeactivate = Désactiver
+StandActivate = Activer
 MassActionDelete = Supprimer
 DeleteStand = Supprimer
 ValidateStand = Valider

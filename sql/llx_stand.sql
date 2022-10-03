@@ -16,23 +16,25 @@
 --
 -- ============================================================================
 
--- DROP TABLE `llx_stand`;
+DROP TABLE `llx_stand`;
 
-CREATE TABLE IF NOT EXISTS `llx_stand`(
+CREATE TABLE IF NOT EXISTS `llx_stand`
+(
     `rowid`          int(11) AUTO_INCREMENT,
-    `ref`             varchar(255) NULL,
+    `ref`            varchar(255) NULL,
     `name`           varchar(255) NULL,
     `description`    text         NULL,
     `address`        varchar(255) NULL,
-    `zip`       varchar(255) NULL,
+    `zip`            varchar(255) NULL,
     `town`           varchar(255) NULL,
     `longitude`      double  DEFAULT 0,
     `latitude`       double  DEFAULT 0,
-    `fk_statut`      int(11) DEFAULT 0,
     `datec`          datetime     NULL,
+    `active`         int(11) DEFAULT 0,
     `user_author_id` int(11) DEFAULT 0,
     `entity`         int(11) DEFAULT 0,
     `tms`            timestamp    NOT NULL,
-  PRIMARY KEY (`rowid`)    
-)ENGINE=innodb DEFAULT CHARSET=utf8;
+    PRIMARY KEY (`rowid`)
+) ENGINE = innodb
+  DEFAULT CHARSET = utf8;
 

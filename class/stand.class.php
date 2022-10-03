@@ -129,10 +129,10 @@ class Stand extends CommonObject
     public $latitude;
 
     /**
-     * Status
+     * Active
      * @var int
      */
-    public $fk_statut;
+    public $active;
 
 	/**
 	 * Creation date
@@ -163,15 +163,6 @@ class Stand extends CommonObject
      * @var array
      */
     public $lines = array();
-
-	/**
-	 * Draft status
-	 */
-	const STATUS_DRAFT = 0;
-	/**
-	 * Validated status
-	 */
-	const STATUS_VALIDATED = 1;
 
 
 	/**
@@ -213,8 +204,8 @@ class Stand extends CommonObject
         'town' =>array('type'=>'varchar(255)', 'label'=>'StandTown', 'enabled'=>1, 'visible'=>0, 'position'=>45),
         'longitude' =>array('type'=>'double', 'label'=>'StandLongitude', 'enabled'=>1, 'visible'=>1, 'position'=>50),
         'latitude' =>array('type'=>'double', 'label'=>'StandLatitude', 'enabled'=>1, 'visible'=>1, 'position'=>55),
-        'fk_statut' =>array('type'=>'smallint(6)', 'label'=>'Status', 'enabled'=>1, 'visible'=>-1, 'notnull'=>1, 'position'=>60),
-		'datec' =>array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>1, 'visible'=>-1, 'position'=>65),
+        'active' =>array('type'=>'smallint(6)', 'label'=>'StandActive', 'enabled'=>1, 'visible'=>1, 'position'=>65),
+        'datec' =>array('type'=>'datetime', 'label'=>'DateCreation', 'enabled'=>1, 'visible'=>-1, 'position'=>70),
 		'user_author_id' =>array('type'=>'integer:User:user/class/user.class.php', 'label'=>'Fk user author', 'enabled'=>1, 'visible'=>-1, 'position'=>80),
 		'tms' =>array('type'=>'timestamp', 'label'=>'DateModification', 'enabled'=>1, 'visible'=>-1, 'notnull'=>1, 'position'=>100)
 		);
@@ -278,8 +269,8 @@ class Stand extends CommonObject
 		$this->datec = dol_now();
 		$this->entity = $conf->entity;
 		$this->user_author_id = $user->id;
-		$this->fk_statut = self::STATUS_DRAFT;
 		$this->ref = empty($this->ref) ? $this->getNextNumRef($mysoc) : $this->ref;
+        $this->active = 1;
 
         $result = $this->verify();
 
@@ -297,7 +288,7 @@ class Stand extends CommonObject
             $sql.= " , latitude";
             $sql.= " , datec";
             $sql.= " , user_author_id";
-            $sql.= " , fk_statut";
+            $sql.= " , active";
             $sql.= " , entity";
             $sql.= " , tms";
             $sql.= ") VALUES (";
@@ -311,7 +302,7 @@ class Stand extends CommonObject
             $sql.= ", ".(!empty($this->latitude) ? $this->latitude : "0");
             $sql.= ", ".(!empty($this->datec) ? "'".$this->db->idate($this->datec)."'" : "null");
             $sql.= ", ".(!empty($this->user_author_id) ? $this->user_author_id : "0");
-            $sql.= ", ".$this->fk_statut;
+            $sql.= ", ".(!empty($this->active) ? $this->active : "0");
             $sql.= ", ".(!empty($this->entity) ? $this->entity : "0");
             $sql.= ", '".$this->db->idate($now)."'";
             $sql.= ")";
@@ -410,6 +401,7 @@ class Stand extends CommonObject
         $sql.= ", town = ".(!empty($this->town) ? "'".$this->db->escape($this->town)."'" : "null");
         $sql.= ", latitude = ".(!empty($this->latitude) ? $this->latitude : "0");
         $sql.= ", longitude = ".(!empty($this->longitude) ? $this->longitude : "0");
+        $sql.= ", active = ".(!empty($this->active) ? $this->active : "0");
         $sql.= ", tms = '".$this->db->idate(dol_now())."'";
         $sql.= " WHERE rowid = " . $id;
 
@@ -460,8 +452,8 @@ class Stand extends CommonObject
             return -1;
         }
 
-		$sql = "SELECT e.rowid, e.ref, e.datec, e.tms, e.name, e.description, e.address, e.zip, e.town, e.latitude, ";
-		$sql.= " e.longitude, e.user_author_id, e.entity, e.fk_statut ";
+		$sql = "SELECT e.rowid, e.ref, e.datec, e.active, e.tms, e.name, e.description, e.address, e.zip, e.town, e.latitude, ";
+		$sql.= " e.longitude, e.user_author_id, e.entity ";
 		$sql.= " FROM ".MAIN_DB_PREFIX."stand e";
         if ($id > 0) {
             $sql.= " WHERE e.rowid=".$id;
@@ -495,8 +487,9 @@ class Stand extends CommonObject
 
 				$this->entity			= $obj->entity;
 
-				$this->fk_statut = $obj->fk_statut;
-                $this->statut = $this->fk_statut;
+                $this->statut = 0;
+
+                $this->active			= $obj->active;
 
 				$this->fetch_optionals();
 
@@ -595,125 +588,6 @@ class Stand extends CommonObject
 			return -$error;
 		}
 
-	}
-
-	/**
-	 *	Validate stand
-	 *
-	 *	@param		User	$user     		User making status change
-	 *  @param		int		$notrigger		1=Does not execute triggers, 0= execute triggers
-	 *	@return  	int						<=0 if OK, 0=Nothing done, >0 if KO
-	 */
-	public function valid($user, $notrigger = 0)
-	{
-		global $conf, $langs;
-
-		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-
-		$error = 0;
-
-		// Protection
-		if ($this->fk_statut == self::STATUS_VALIDATED) {
-			dol_syslog(get_class($this)."::valid action abandonned: already validated", LOG_WARNING);
-			return 0;
-		}
-
-		$now = dol_now();
-
-		$this->db->begin();
-
-		// Validate
-		$sql = "UPDATE ".MAIN_DB_PREFIX."stand";
-		$sql .= " SET fk_statut = ".self::STATUS_VALIDATED;
-		$sql .= " WHERE rowid = ".((int) $this->id);
-
-		dol_syslog(get_class($this)."::valid", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if (!$resql) {
-			dol_print_error($this->db);
-			$this->error = $this->db->lasterror();
-			$error++;
-		}
-
-		if (!$error && !$notrigger) {
-			// Call trigger
-			$result = $this->call_trigger('STAND_VALIDATE', $user);
-			if ($result < 0) {
-				$error++;
-			}
-			// End call triggers
-		}
-
-		// Set new ref and current status
-		if (!$error) {
-			$this->fk_statut = self::STATUS_VALIDATED;
-            $this->statut = self::STATUS_VALIDATED;
-		}
-
-		if (!$error) {
-			$this->db->commit();
-			return 1;
-		} else {
-			$this->db->rollback();
-			return -1;
-		}
-	}
-
-	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
-	/**
-	 *	Set draft status
-	 *
-	 *	@param	User	$user			Object user that modify
-	 *	@param	int		$idwarehouse	Warehouse ID to use for stock change (Used only if option STOCK_CALCULATE_ON_VALIDATE_ORDER is on)
-	 *	@return	int						<0 if KO, >0 if OK
-	 */
-	public function setDraft($user, $idwarehouse = -1)
-	{
-		//phpcs:enable
-		global $conf, $langs;
-
-		$error = 0;
-
-		// Protection
-		if ($this->fk_statut <= self::STATUS_DRAFT) {
-			return 0;
-		}
-
-		dol_syslog(__METHOD__, LOG_DEBUG);
-
-		$this->db->begin();
-
-		$sql = "UPDATE ".MAIN_DB_PREFIX."stand";
-		$sql .= " SET fk_statut = ".self::STATUS_DRAFT;
-		$sql .= " WHERE rowid = ".((int) $this->id);
-
-		if ($this->db->query($sql)) {
-			if (!$error) {
-				$this->oldcopy = clone $this;
-			}
-
-			if (!$error) {
-				// Call trigger
-				$result = $this->call_trigger('STAND_UNVALIDATE', $user);
-				if ($result < 0) {
-					$error++;
-				}
-			}
-
-			if (!$error) {
-				$this->fk_statut = self::STATUS_DRAFT;
-                $this->statut = self::STATUS_DRAFT;
-				$this->db->commit();
-				return 1;
-			} else {
-				$this->db->rollback();
-				return -1;
-			}
-		} else {
-			$this->error = $this->db->error();
-			$this->db->rollback();
-			return -1;
-		}
 	}
 
      /**
@@ -866,7 +740,7 @@ class Stand extends CommonObject
      */
     function getLibStatut($mode)
     {
-		return $this->LibStatut($this->fk_statut, $mode);
+		return $this->LibStatut(0, $mode);
 	}
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
@@ -881,26 +755,7 @@ class Stand extends CommonObject
 	{
 		// phpcs:enable
 		global $langs, $conf;
-
-
-		$labelTooltip = '';
-
-		if ($status == self::STATUS_DRAFT) {
-			$labelStatus = $langs->transnoentitiesnoconv('StandStatusDraft');
-			$labelStatusShort = $langs->transnoentitiesnoconv('StandStatusDraftShort');
-			$statusType = 'status0';
-		} elseif ($status == self::STATUS_VALIDATED) {
-			$labelStatus = $langs->transnoentitiesnoconv('StandStatusValidated');
-			$labelStatusShort = $langs->transnoentitiesnoconv('StandStatusValidatedShort');
-			$statusType = 'status1';
-        } else {
-			$labelStatus = $langs->transnoentitiesnoconv('Unknown');
-			$labelStatusShort = '';
-			$statusType = '';
-			$mode = 0;
-		}
-
-		return dolGetStatus($labelStatus, $labelStatusShort, '', $statusType, $mode, '', array('tooltip' => $labelTooltip));
+		return '';
 	}
 
 	/**
@@ -946,23 +801,4 @@ class Stand extends CommonObject
 			return -1;
 		}
 	}
-
-    /**
-    *  Load types in memory from database
-    *
-    *  @return array
-    */
-    function getStatus()
-    {
-        global $langs, $conf;
-
-        dol_syslog(get_class($this)."::getStatus");
-
-        $status = array(
-            self::STATUS_DRAFT => $langs->trans('StandStatusDraftShort'),
-            self::STATUS_VALIDATED => $langs->trans('StandStatusValidatedShort'),
-        );
-
-        return $status;
-    }
 }

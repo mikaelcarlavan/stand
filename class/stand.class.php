@@ -436,7 +436,7 @@ class Stand extends CommonObject
 	 *  @param	int		$id      			Id of slide
 	 *  @return int     					<0 if KO, 0 if not found, >0 if OK
 	 */
-	function fetch($id, $ref='', $track_id = '')
+	function fetch($id, $ref='')
 	{
 		global $langs, $conf;
 
@@ -444,7 +444,7 @@ class Stand extends CommonObject
 
 
 		// Check parameters
-        if (empty($id) && empty($ref) && empty($track_id))
+        if (empty($id) && empty($ref))
         {
             $this->error = 'ErrorWrongParameters';
             //dol_print_error(get_class($this)."::fetch ".$this->error);
@@ -456,10 +456,8 @@ class Stand extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."stand e";
         if ($id > 0) {
             $sql.= " WHERE e.rowid=".$id;
-        } else if (!empty($ref)) {
-            $sql.= " WHERE e.entity IN (".getEntity('stand').") AND e.ref='".$this->db->escape($ref)."'";
         } else {
-            $sql.= " WHERE e.entity IN (".getEntity('stand').") AND e.track_id='".$this->db->escape($track_id)."'";
+            $sql.= " WHERE e.entity IN (".getEntity('stand').") AND e.ref='".$this->db->escape($ref)."'";
         }
 
 		$resql = $this->db->query($sql);
@@ -485,9 +483,6 @@ class Stand extends CommonObject
                 $this->latitude 	    = $obj->latitude;
 
 				$this->entity			= $obj->entity;
-
-                $this->statut = 0;
-
                 $this->active			= $obj->active;
 
 				$this->fetch_optionals();

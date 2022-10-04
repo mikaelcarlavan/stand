@@ -196,7 +196,7 @@ class Stand extends CommonObject
 		'rowid' =>array('type'=>'integer', 'label'=>'TechnicalID', 'enabled'=>1, 'visible'=>-1, 'notnull'=>1, 'position'=>10),
 		'entity' =>array('type'=>'integer', 'label'=>'Entity', 'default'=>1, 'enabled'=>1, 'visible'=>-2, 'notnull'=>1, 'position'=>15, 'index'=>1),
         'ref' =>array('type'=>'varchar(30)', 'label'=>'Ref', 'enabled'=>1, 'visible'=>-1, 'notnull'=>1, 'showoncombobox'=>1, 'position'=>20),
-		'name' =>array('type'=>'varchar(255)', 'label'=>'StandName', 'enabled'=>1, 'visible'=>0, 'position'=>25),
+		'name' =>array('type'=>'varchar(255)', 'label'=>'StandName', 'enabled'=>1, 'visible'=>1, 'position'=>25),
 		'description' =>array('type'=>'varchar(255)', 'label'=>'StandDescription', 'enabled'=>1, 'visible'=>1, 'position'=>30),
 		'address' =>array('type'=>'varchar(255)', 'label'=>'StandAddress', 'enabled'=>1, 'visible'=>0, 'position'=>35),
 		'zip' =>array('type'=>'varchar(255)', 'label'=>'StandZip', 'enabled'=>1, 'visible'=>0, 'position'=>30),

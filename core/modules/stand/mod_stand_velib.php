@@ -29,7 +29,7 @@ dol_include_once("/stand/core/modules/stand/modules_stand.php");
 class mod_stand_velib extends ModeleNumRefStands
 {
 	var $version='dolibarr';		// 'development', 'experimental', 'dolibarr'
-	var $prefix='VB';
+	var $prefix='ST';
 	var $error='';
 	var $nom = "Velib";
 

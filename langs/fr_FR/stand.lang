@@ -93,14 +93,10 @@ StandDeactivate = Désactiver
 StandActivate = Activer
 MassActionDelete = Supprimer
 DeleteStand = Supprimer
-ValidateStand = Valider
 SelectStand = Merci de sélectionner une station
 ConfirmDeleteStand = Êtes-vous sûr de vouloir effacer cette station ?
-ConfirmValidateStand = Êtes-vous sûr de vouloir valider cette station ?
 SearchIntoStands = Stands
 SendStandRef = Envoi de la station
-ConfirmUnvalidateStand=Êtes-vous sûr de vouloir restaurer la station <b>%s</b> au statut brouillon ?
-UnvalidateStand=Modifier la station
 #
 StandStatusValidated = Validée
 StandStatusValidatedShort = Validée

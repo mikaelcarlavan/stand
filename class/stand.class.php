@@ -765,7 +765,7 @@ class Stand extends CommonObject
 
 		$sql = "SELECT e.rowid as id, e.ref, e.datec";
 		$sql.= " FROM ".MAIN_DB_PREFIX."stand as e";
-		$sql.= " WHERE e.entity IN (".getEntity('stand').")";
+		$sql.= " WHERE e.entity IN (".getEntity('stand').") AND e.active = 1";
 
 		$result=$this->db->query($sql);
 		if ($result)
@@ -777,9 +777,7 @@ class Stand extends CommonObject
 				while ($i < $num)
 				{
 					$obj = $this->db->fetch_object($result);
-
-					$datec = $this->db->jdate($obj->datec);
-					$stand = new Stand($this->db);
+                    $stand = new Stand($this->db);
 					$stand->fetch($obj->id);
 
 					$stands[$obj->id] = $stand;

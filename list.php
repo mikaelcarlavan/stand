@@ -169,7 +169,6 @@ if (empty($reshook)) {
 
         $search_ref = '';
         $search_user_author_id = '';
-        $search_status = -1;
 
         $toselect = '';
         $search_array_options = array();
@@ -312,7 +311,6 @@ if ($resql) {
     if ($search_town) $param .= '&search_town=' . urlencode($search_town);
 
     if ($search_user_author_id > 0) $param .= '&search_user_author_id=' . urlencode($search_user_author_id);
-    if ($search_status >= 0) $param .= '&search_status=' . urlencode($search_status);
 
     if ($optioncss != '') $param .= '&optioncss=' . urlencode($optioncss);
 
@@ -504,12 +502,9 @@ if ($resql) {
     $productstat_cache = array();
 
     $generic_stand = new Stand($db);
-    $generic_user = new User($db);
-    $generic_thirdparty = new Societe($db);
-
 
     $i = 0;
-    $totalarray = array();
+    $totalarray = array('nbfield' => 0);
     while ($i < min($num, $limit)) {
         $obj = $db->fetch_object($resql);
 

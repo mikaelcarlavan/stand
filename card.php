@@ -191,24 +191,6 @@ if (empty($reshook))
         if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
         else $object->fetch_thirdparty();
     }
-    elseif ($action == 'confirm_validate' && $confirm == 'yes' && $user->rights->stand->creer)
-    {
-
-        $result = $object->valid($user);
-        if ($result >= 0) {
-
-        } else {
-            setEventMessages($object->error, $object->errors, 'errors');
-        }
-
-    }
-    elseif ($action == 'confirm_modif' && $user->rights->stand->creer)
-    {
-        $result = $object->setDraft($user);
-        if ($result >= 0) {
-
-        }
-    }
 
 	if ($action == 'update_extras')
 	{
@@ -351,20 +333,6 @@ if ($action == 'create' && $user->rights->stand->creer)
 		// Confirmation to delete
 		if ($action == 'delete') {
 			$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteStand'), $langs->trans('ConfirmDeleteStand'), 'confirm_delete', '', 0, 1);
-		}
-
-		// Confirmation of validation
-		if ($action == 'validate') {
-			$formquestion = array();
-			$text = $langs->trans('ConfirmValidateStand', $object->ref);
-			$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('ValidateStand'), $text, 'confirm_validate', $formquestion, 0, 1, 220);
-		}
-
-		// Confirm back to draft status
-		if ($action == 'modif') {
-			$text = $langs->trans('ConfirmUnvalidateStand', $object->ref);
-			$formquestion = array();
-			$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('UnvalidateStand'), $text, 'confirm_modif', $formquestion, "yes", 1, 220);
 		}
 
 

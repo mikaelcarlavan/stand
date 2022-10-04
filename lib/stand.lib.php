@@ -41,7 +41,9 @@ function stand_prepare_admin_head()
 	$head[$h][2] = 'settings';
 	$h++;
 
-	$head[$h][0] = dol_buildpath("/stand/admin/extrafields.php", 1);
+    complete_head_from_modules($conf, $langs, null, $head, $h, 'stand_admin');
+
+    $head[$h][0] = dol_buildpath("/stand/admin/extrafields.php", 1);
 	$head[$h][1] = $langs->trans("Extrafields");
 	$head[$h][2] = 'attributes';
 	$h++;
@@ -51,7 +53,9 @@ function stand_prepare_admin_head()
 	$head[$h][2] = 'about';
 	$h++;
 
-	return $head;
+    complete_head_from_modules($conf, $langs, null, $head, $h, 'stand_admin', 'remove');
+
+    return $head;
 }
 
 /**
@@ -75,6 +79,7 @@ function stand_prepare_head($object)
 		$h++;
 	}
 
+    complete_head_from_modules($conf, $langs, $object, $head, $h, 'stand');
 
 	$upload_dir = $conf->stand->dir_output . "/" . dol_sanitizeFileName($object->ref);
 	$nbFiles = count(dol_dir_list($upload_dir,'files',0,'','(\.meta|_preview.*\.png)$'));
@@ -91,5 +96,7 @@ function stand_prepare_head($object)
 	$head[$h][2] = 'info';
 	$h++;
 
-	return $head;
+    complete_head_from_modules($conf, $langs, $object, $head, $h, 'stand', 'remove');
+
+    return $head;
 }

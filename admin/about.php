@@ -46,7 +46,7 @@ if (! $user->admin) {
 }
 
 $versions = array(
-	array('version' => '1.0.0', 'date' => '03/12/2022', 'updates' => $langs->trans('StandFirstVersion')),
+	array('version' => '1.0.0', 'date' => '03/10/2022', 'updates' => $langs->trans('StandFirstVersion')),
 );
 /*
  * View

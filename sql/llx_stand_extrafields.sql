@@ -1,5 +1,5 @@
 -- ============================================================================
--- Copyright (C) 2019 Mikael Carlavan  <contact@mika-carl.fr>
+-- Copyright (C) 2022 Mikael Carlavan  <contact@mika-carl.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by

@@ -72,6 +72,8 @@ if ($object->fetch($id))
 	$upload_dir = $conf->stand->dir_output . "/" . dol_sanitizeFileName($object->ref);
 }
 
+$permissiontoadd = $user->rights->stand->creer; 	// Used by the include of actions_dellink.inc.php
+
 include_once DOL_DOCUMENT_ROOT . '/core/actions_linkedfiles.inc.php';
 
 

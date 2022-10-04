@@ -303,14 +303,14 @@ if ($action == 'create' && $user->rights->stand->creer)
     print '<input type="text" size="60"  class="flat" name="town" value="'.GETPOST('town').'">';
     print '</td></tr>';
 
-    // Longitude
-    print '<tr><td>' . $langs->trans('StandLongitude') . '</td><td>';
-    print '<input type="text"  size="60" class="flat" name="longitude" value="'.GETPOST('longitude').'">';
-    print '</td></tr>';
-
     // Latitude
     print '<tr><td>' . $langs->trans('StandLatitude') . '</td><td>';
     print '<input type="text" size="60" class="flat" name="latitude" value="'.GETPOST('latitude').'">';
+    print '</td></tr>';
+
+    // Longitude
+    print '<tr><td>' . $langs->trans('StandLongitude') . '</td><td>';
+    print '<input type="text"  size="60" class="flat" name="longitude" value="'.GETPOST('longitude').'">';
     print '</td></tr>';
 
 	// Other attributes
@@ -497,26 +497,6 @@ if ($action == 'create' && $user->rights->stand->creer)
         print '</td>';
         print '</tr>';
 
-        print '<tr><td>';
-        print '<table class="nobordernopadding" width="100%"><tr><td>';
-        print $langs->trans('StandLongitude');
-        print '</td>';
-        if ($action != 'editlongitude')
-            print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editlongitude&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
-        print '</tr></table>';
-        print '</td><td>';
-        if ($action == 'editlongitude') {
-            print '<form name="setlongitude" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
-            print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
-            print '<input type="hidden" name="action" value="setlongitude">';
-            print '<input type="text" class="flat" size="60" name="longitude" value="'.$object->longitude.'">';
-            print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
-            print '</form>';
-        } else {
-            print $object->longitude ? $object->longitude : '&nbsp;';
-        }
-        print '</td>';
-        print '</tr>';
 
         print '<tr><td>';
         print '<table class="nobordernopadding" width="100%"><tr><td>';
@@ -539,6 +519,27 @@ if ($action == 'create' && $user->rights->stand->creer)
         print '</td>';
         print '</tr>';
 
+        print '<tr><td>';
+        print '<table class="nobordernopadding" width="100%"><tr><td>';
+        print $langs->trans('StandLongitude');
+        print '</td>';
+        if ($action != 'editlongitude')
+            print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editlongitude&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
+        print '</tr></table>';
+        print '</td><td>';
+        if ($action == 'editlongitude') {
+            print '<form name="setlongitude" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
+            print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
+            print '<input type="hidden" name="action" value="setlongitude">';
+            print '<input type="text" class="flat" size="60" name="longitude" value="'.$object->longitude.'">';
+            print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
+            print '</form>';
+        } else {
+            print $object->longitude ? $object->longitude : '&nbsp;';
+        }
+        print '</td>';
+        print '</tr>';
+        
 		// Other attributes
 		include DOL_DOCUMENT_ROOT . '/core/tpl/extrafields_view.tpl.php';
 

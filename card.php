@@ -28,7 +28,7 @@ include_once DOL_DOCUMENT_ROOT . '/core/class/html.formmail.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/doleditor.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
-
+dol_include_once("/bike/class/bike.class.php");
 dol_include_once("/stand/class/stand.class.php");
 dol_include_once("/stand/lib/stand.lib.php");
 
@@ -162,6 +162,48 @@ if (empty($reshook))
         if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
         else $object->fetch_thirdparty();
     }
+    else if ($action == 'confirm_deleteline' && $confirm == 'yes' && $user->rights->stand->creer)
+    {
+        // Remove a product line
+        $bike = new Bike($db);
+        $result = $bike->fetch($lineid);
+        if ($result > 0) {
+            $bike->fk_stand = 0;
+            $result = $bike->update($user);
+        }
+
+        if ($result > 0) {
+            header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+            exit;
+        } else {
+            setEventMessages($object->error, $object->errors, 'errors');
+        }
+    } elseif ($action == 'addline' && $user->rights->bike->creer) {		// Add a new line
+        $langs->load('errors');
+        $error = 0;
+
+        // Set if we used free entry or predefined product
+        $fk_bike = GETPOST('fk_bike', 'int');
+
+
+        if (!$error) {
+
+            $bike = new Bike($db);
+            $result = $bike->fetch($fk_bike);
+            if ($result > 0) {
+                $bike->fk_stand = $object->id;
+                $result = $bike->update($user);
+            }
+
+            if ($result > 0) {
+                unset($_POST['fk_bike']);
+            } else {
+                setEventMessages($object->error, $object->errors, 'errors');
+            }
+
+        }
+    }
+
 
 	if ($action == 'update_extras')
 	{
@@ -286,6 +328,9 @@ if ($action == 'create' && $user->rights->stand->creer)
 			$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteStand'), $langs->trans('ConfirmDeleteStand'), 'confirm_delete', '', 0, 1);
 		}
 
+        if ($action == 'ask_deleteline') {
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteStandLine'), $langs->trans('ConfirmDeleteStandLine'), 'confirm_deleteline', '', 0, 1);
+        }
 
 		// Call Hook formConfirm
 		$parameters = array();
@@ -399,6 +444,46 @@ if ($action == 'create' && $user->rights->stand->creer)
 
         print '<div class="clearboth"></div><br />';
 
+        /*
+                 * Lines
+                 */
+        $result = $object->getLinesArray();
+
+        print '<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+		<input type="hidden" name="token" value="' . newToken().'">
+		<input type="hidden" name="action" value="' . (($action != 'editline') ? 'addline' : 'updateline').'">
+		<input type="hidden" name="mode" value="">
+		<input type="hidden" name="page_y" value="">
+		<input type="hidden" name="id" value="' . $object->id.'">';
+
+        print '<div class="div-table-responsive-no-min">';
+        print '<table id="tablelines" class="noborder noshadow" width="100%">';
+
+        // Show object lines
+        if (!empty($object->lines)) {
+            $ret = $object->printObjectLines($action, $mysoc, $object->thirdparty, $lineid, 1);
+        }
+
+        $numlines = count($object->lines);
+
+        /*
+         * Form to add new line
+         */
+        if ($user->rights->bike->creer && $action != 'selectlines') {
+            if ($action != 'editline') {
+                // Add products
+                $parameters = array();
+                // Note that $action and $object may be modified by hook
+                $reshook = $hookmanager->executeHooks('formAddObjectLine', $parameters, $object, $action);
+                if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+                if (empty($reshook))
+                    $object->formAddObjectLine(1, $mysoc, $object->thirdparty);
+            }
+        }
+        print '</table>';
+        print '</div>';
+
+        print "</form>";
 
 		dol_fiche_end();
 

@@ -79,6 +79,8 @@ StandTown = Ville
 StandZip = Code postal
 StandLongitude = Longitude
 StandLatitude = Latitude
+StandBike = Vélo
+StandAddBike = Ajout un vélo
 StandLongitudeLatitude = Latitude/longitude
 DateCreation = Date de création
 DateModificationShort = Date de modif.
@@ -99,6 +101,8 @@ SelectStand = Merci de sélectionner une station
 ConfirmDeleteStand = Êtes-vous sûr de vouloir effacer cette station ?
 SearchIntoStands = Stands
 SendStandRef = Envoi de la station
+ConfirmDeleteStandLine = Êtes-vous sûr de vouloir supprimer ce vélo de la station ?
+DeleteStandLine = Supprimer vélo de la station
 #
 StandStatusValidated = Validée
 StandStatusValidatedShort = Validée

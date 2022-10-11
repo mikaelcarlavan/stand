@@ -27,6 +27,7 @@ require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+dol_include_once("/bike/class/html.form.bike.class.php");
 
 /**
  * Class to manage products or services
@@ -513,50 +514,6 @@ class Stand extends CommonObject
             dol_print_error($this->db);
             return -1;
         }
-
-        $sql = 'SELECT l.rowid, l.fk_bike, l.note, l.fk_user, l.user_author_id, l.datec, l.tms ';
-        $sql .= ' FROM '.MAIN_DB_PREFIX.'bikedet as l';
-        $sql .= ' WHERE l.fk_bike = '.$this->id;
-        $sql .= ' ORDER BY l.rowid';
-
-        dol_syslog(get_class($this)."::fetch_lines", LOG_DEBUG);
-        $result = $this->db->query($sql);
-
-        if ($result) {
-            $num = $this->db->num_rows($result);
-
-            $i = 0;
-            while ($i < $num) {
-                $objp = $this->db->fetch_object($result);
-
-                $line = new BikeLine($this->db);
-
-                $line->rowid            = $objp->rowid;
-                $line->id               = $objp->rowid;
-                $line->fk_bike          = $objp->fk_bike;
-                $line->fk_user          = $objp->fk_user;
-                $line->note            = $objp->note;
-
-                $this->user_author_id 	= $objp->user_author_id;
-                $this->datec 			= $this->db->jdate($objp->datec);
-                $this->tms 			    = $this->db->jdate($objp->tms);
-
-                $line->user = new User($this->db);
-                $line->user->fetch($line->fk_user);
-
-                $line->fetch_optionals();
-
-                $this->lines[$i] = $line;
-                $i++;
-            }
-
-            $this->db->free($result);
-
-            return 1;
-        } else {
-            $this->error = $this->db->error();
-            return -3;
-        }
     }
 
     /**
@@ -569,7 +526,156 @@ class Stand extends CommonObject
         return $this->fetch_lines();
     }
 
-	/**
+    /**
+     *	Show add free and predefined products/services form
+     *
+     *  @param	int		        $dateSelector       1=Show also date range input fields
+     *  @param	Societe			$seller				Object thirdparty who sell
+     *  @param	Societe			$buyer				Object thirdparty who buy
+     *  @param	string			$defaulttpldir		Directory where to find the template
+     *	@return	void
+     */
+    public function formAddObjectLine($dateSelector, $seller, $buyer, $defaulttpldir = '/core/tpl')
+    {
+        global $conf, $user, $langs, $object, $hookmanager, $extrafields;
+        global $form;
+
+        if (!empty($conf->bike->enabled)) {
+            $bikeform = new BikeForm($this->db);
+        }
+
+        // Line extrafield
+        if (!is_object($extrafields)) {
+            require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+            $extrafields = new ExtraFields($this->db);
+        }
+        $extrafields->fetch_name_optionals_label($this->table_element_line);
+
+        // Output template part (modules that overwrite templates must declare this into descriptor)
+        // Use global variables + $dateSelector + $seller and $buyer
+        // Note: This is deprecated. If you need to overwrite the tpl file, use instead the hook 'formAddObjectLine'.
+        $tpl = dol_buildpath('stand/tpl/objectline_create.tpl.php');
+
+        if (empty($conf->file->strict_mode)) {
+            $res = @include $tpl;
+        } else {
+            $res = include $tpl; // for debug
+        }
+    }
+
+    /**
+     *	Return HTML table for object lines
+     *	TODO Move this into an output class file (htmlline.class.php)
+     *	If lines are into a template, title must also be into a template
+     *	But for the moment we don't know if it's possible as we keep a method available on overloaded objects.
+     *
+     *	@param	string		$action				Action code
+     *	@param  string		$seller            	Object of seller third party
+     *	@param  string  	$buyer             	Object of buyer third party
+     *	@param	int			$selected		   	Object line selected
+     *	@param  int	    	$dateSelector      	1=Show also date range input fields
+     *  @param	string		$defaulttpldir		Directory where to find the template
+     *	@return	void
+     */
+    public function printObjectLines($action, $seller, $buyer, $selected = 0, $dateSelector = 0, $defaulttpldir = '/core/tpl')
+    {
+        global $conf, $hookmanager, $langs, $user, $form, $extrafields, $object;
+        // TODO We should not use global var for this
+        global $inputalsopricewithtax, $usemargins, $disableedit, $disablemove, $disableremove, $outputalsopricetotalwithtax;
+
+        $num = count($this->lines);
+
+        // Line extrafield
+        if (!is_object($extrafields)) {
+            require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+            $extrafields = new ExtraFields($this->db);
+        }
+        $extrafields->fetch_name_optionals_label($this->table_element_line);
+
+        $parameters = array('num'=>$num, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$this->table_element_line);
+        $reshook = $hookmanager->executeHooks('printObjectLineTitle', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+        if (empty($reshook)) {
+
+            $tpl = dol_buildpath('stand/tpl/objectline_title.tpl.php');
+
+            if (empty($conf->file->strict_mode)) {
+                $res = @include $tpl;
+            } else {
+                $res = include $tpl; // for debug
+            }
+        }
+
+        $i = 0;
+
+        print "<!-- begin printObjectLines() --><tbody>\n";
+        foreach ($this->lines as $line) {
+            //Line extrafield
+            $line->fetch_optionals();
+
+            //if (is_object($hookmanager) && (($line->product_type == 9 && ! empty($line->special_code)) || ! empty($line->fk_parent_line)))
+            if (is_object($hookmanager)) {   // Old code is commented on preceding line.
+                $parameters = array('line'=>$line, 'num'=>$num, 'i'=>$i, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$line->table_element);
+                $reshook = $hookmanager->executeHooks('printObjectLine', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+            }
+            if (empty($reshook)) {
+                $this->printObjectLine($action, $line, '', $num, $i, $dateSelector, $seller, $buyer, $selected, $extrafields, $defaulttpldir);
+            }
+
+            $i++;
+        }
+        print "</tbody><!-- end printObjectLines() -->\n";
+    }
+
+    /**
+     *	Return HTML content of a detail line
+     *	TODO Move this into an output class file (htmlline.class.php)
+     *
+     *	@param	string      		$action				GET/POST action
+     *	@param  CommonObjectLine 	$line			    Selected object line to output
+     *	@param  string	    		$var               	Is it a an odd line (true)
+     *	@param  int		    		$num               	Number of line (0)
+     *	@param  int		    		$i					I
+     *	@param  int		    		$dateSelector      	1=Show also date range input fields
+     *	@param  string	    		$seller            	Object of seller third party
+     *	@param  string	    		$buyer             	Object of buyer third party
+     *	@param	int					$selected		   	Object line selected
+     *  @param  Extrafields			$extrafields		Object of extrafields
+     *  @param	string				$defaulttpldir		Directory where to find the template (deprecated)
+     *	@return	void
+     */
+    public function printObjectLine($action, $line, $var, $num, $i, $dateSelector, $seller, $buyer, $selected = 0, $extrafields = null, $defaulttpldir = '/core/tpl')
+    {
+        global $conf, $langs, $user, $object, $hookmanager;
+        global $form;
+        global $object_rights, $disableedit, $disablemove, $disableremove; // TODO We should not use global var for this !
+
+        $object_rights = $this->getRights();
+
+        $element = $this->element;
+
+        $text = '';
+        $description = '';
+
+
+        if (!empty($conf->bike->enabled)) {
+            $bikeform = new BikeForm($this->db);
+        }
+
+        // Line in view mode
+        $label = $line->name;
+
+        $tpl = dol_buildpath('stand/tpl/objectline_view.tpl.php');
+
+        if (empty($conf->file->strict_mode)) {
+            $res = @include $tpl;
+        } else {
+            $res = include $tpl; // for debug
+        }
+
+
+    }
+
+    /**
 	 *  Delete a gestion from database (if not used)
 	 *
 	 *	@param      User	$user       

@@ -48,9 +48,6 @@ $search_user_author_id = GETPOST('search_user_author_id', 'int');
 
 $search_name = GETPOST('search_name');
 $search_description = GETPOST('search_description');
-$search_address = GETPOST('search_address');
-$search_town = GETPOST('search_town');
-$search_zip = GETPOST('search_zip');
 
 $sall = trim((GETPOST('search_all', 'alphanohtml') != '') ? GETPOST('search_all', 'alphanohtml') : GETPOST('sall', 'alphanohtml'));
 
@@ -97,9 +94,6 @@ $arrayfields = array(
     'e.ref' => array('label' => $langs->trans("Ref"), 'checked' => 1),
     'e.name' => array('label' => $langs->trans("StandName"), 'checked' => 1),
     'e.description' => array('label' => $langs->trans("StandDescription"), 'checked' => 1),
-    'e.address' => array('label' => $langs->trans("StandAddress"), 'checked' => 1),
-    'e.town' => array('label' => $langs->trans("StandTown"), 'checked' => 1),
-    'e.zip' => array('label' => $langs->trans("StandZip"), 'checked' => 1),
     'e.longitude' => array('label' => $langs->trans("StandLongitude"), 'checked' => 0),
     'e.latitude' => array('label' => $langs->trans("StandLatitude"), 'checked' => 0),
     'e.datec' => array('label' => $langs->trans("DateCreation"), 'checked' => 1),
@@ -162,10 +156,7 @@ if (empty($reshook)) {
         $search_cday = '';
 
         $search_name = '';
-        $search_address = '';
         $search_description = '';
-        $search_town = '';
-        $search_zip = '';
 
         $search_ref = '';
         $search_user_author_id = '';
@@ -211,7 +202,7 @@ $help_url = "";
 
 $sql = 'SELECT';
 if ($sall) $sql = 'SELECT DISTINCT';
-$sql .= " e.rowid, e.ref, e.active, e.datec, e.name, e.description, e.address, e.zip, e.town, e.latitude, e.longitude, e.user_author_id, e.entity, e.tms ";
+$sql .= " e.rowid, e.ref, e.active, e.datec, e.name, e.description, e.latitude, e.longitude, e.user_author_id, e.entity, e.tms ";
 
 // Add fields from extrafields
 foreach ($extrafields->attribute_label as $key => $val) $sql .= ($extrafields->attribute_type[$key] != 'separate' ? ",ef." . $key . ' as options_' . $key : '');
@@ -241,10 +232,6 @@ if ($search_cmonth > 0) {
 
 if ($search_name) $sql .= natural_search('e.name', $search_name);
 if ($search_description) $sql .= natural_search('e.description', $search_description);
-if ($search_address) $sql .= natural_search('e.address', $search_address);
-if ($search_zip) $sql .= natural_search('e.zip', $search_zip);
-if ($search_town) $sql .= natural_search('e.town', $search_town);
-
 
 if ($search_user_author_id > 0) $sql .= " AND e.user_author_id = " . $search_user_author_id;
 
@@ -306,9 +293,6 @@ if ($resql) {
 
     if ($search_name) $param .= '&search_name=' . urlencode($search_name);
     if ($search_description) $param .= '&search_description=' . urlencode($search_description);
-    if ($search_address) $param .= '&search_address=' . urlencode($search_address);
-    if ($search_zip) $param .= '&search_zip=' . urlencode($search_zip);
-    if ($search_town) $param .= '&search_town=' . urlencode($search_town);
 
     if ($search_user_author_id > 0) $param .= '&search_user_author_id=' . urlencode($search_user_author_id);
 
@@ -406,26 +390,6 @@ if ($resql) {
         print '</td>';
     }
 
-    if (!empty($arrayfields['e.address']['checked'])) {
-        print '<td class="liste_titre">';
-        print '<input class="flat" size="10" type="text" name="search_address" value="' . $search_address . '">';
-        print '</td>';
-    }
-
-
-    if (!empty($arrayfields['e.zip']['checked'])) {
-        print '<td class="liste_titre">';
-        print '<input class="flat" size="10" type="text" name="search_zip" value="' . $search_zip . '">';
-        print '</td>';
-    }
-
-
-    if (!empty($arrayfields['e.town']['checked'])) {
-        print '<td class="liste_titre">';
-        print '<input class="flat" size="10" type="text" name="search_town" value="' . $search_town . '">';
-        print '</td>';
-    }
-
 
     if (!empty($arrayfields['e.longitude']['checked'])) {
         print '<td class="liste_titre">';
@@ -479,9 +443,6 @@ if ($resql) {
     if (!empty($arrayfields['e.ref']['checked'])) print_liste_field_titre($arrayfields['e.ref']['label'], $_SERVER["PHP_SELF"], 'e.ref', '', $param, '', $sortfield, $sortorder);
     if (!empty($arrayfields['e.name']['checked'])) print_liste_field_titre($arrayfields['e.name']['label'], $_SERVER["PHP_SELF"], 'e.name', '', $param, '', $sortfield, $sortorder, '');
     if (!empty($arrayfields['e.description']['checked'])) print_liste_field_titre($arrayfields['e.description']['label'], $_SERVER["PHP_SELF"], 'e.description', '', $param, '', $sortfield, $sortorder, '');
-    if (!empty($arrayfields['e.address']['checked'])) print_liste_field_titre($arrayfields['e.address']['label'], $_SERVER["PHP_SELF"], 'e.address', '', $param, '', $sortfield, $sortorder, '');
-    if (!empty($arrayfields['e.zip']['checked'])) print_liste_field_titre($arrayfields['e.zip']['label'], $_SERVER["PHP_SELF"], 'e.zip', '', $param, '', $sortfield, $sortorder, '');
-    if (!empty($arrayfields['e.town']['checked'])) print_liste_field_titre($arrayfields['e.town']['label'], $_SERVER["PHP_SELF"], 'e.town', '', $param, '', $sortfield, $sortorder, '');
     if (!empty($arrayfields['e.longitude']['checked'])) print_liste_field_titre($arrayfields['e.longitude']['label'], $_SERVER["PHP_SELF"], 'e.longitude', '', $param, '', $sortfield, $sortorder, '');
     if (!empty($arrayfields['e.latitude']['checked'])) print_liste_field_titre($arrayfields['e.latitude']['label'], $_SERVER["PHP_SELF"], 'e.latitude', '', $param, '', $sortfield, $sortorder, '');
 
@@ -539,29 +500,6 @@ if ($resql) {
         if (!empty($arrayfields['e.description']['checked'])) {
             print '<td align="left">';
             print dol_nl2br($obj->description);
-            print '</td>';
-            if (!$i) $totalarray['nbfield']++;
-        }
-
-
-        if (!empty($arrayfields['e.address']['checked'])) {
-            print '<td align="left">';
-            print $obj->address;
-            print '</td>';
-            if (!$i) $totalarray['nbfield']++;
-        }
-
-
-        if (!empty($arrayfields['e.zip']['checked'])) {
-            print '<td align="left">';
-            print $obj->zip;
-            print '</td>';
-            if (!$i) $totalarray['nbfield']++;
-        }
-
-        if (!empty($arrayfields['e.town']['checked'])) {
-            print '<td align="left">';
-            print $obj->town;
             print '</td>';
             if (!$i) $totalarray['nbfield']++;
         }

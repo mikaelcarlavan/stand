@@ -63,6 +63,7 @@ StandsNew = Nouvelle station
 StandsArea = Espace stations
 NoStand = Aucune station
 LastModifiedStands = Les %d derniers stations modifiées
+
 #
 NewStand = Nouvelle station
 CreateStand = Créer station
@@ -78,6 +79,7 @@ StandTown = Ville
 StandZip = Code postal
 StandLongitude = Longitude
 StandLatitude = Latitude
+StandLongitudeLatitude = Latitude/longitude
 DateCreation = Date de création
 DateModificationShort = Date de modif.
 UserAuthorId = Utilisateur

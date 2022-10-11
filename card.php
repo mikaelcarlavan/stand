@@ -152,40 +152,11 @@ if (empty($reshook))
 		
 		if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
 	}
-    else if ($action == 'setaddress' && !GETPOST('cancel','alpha'))
+    else if ($action == 'setgps' && !GETPOST('cancel','alpha'))
     {
-        $object->address = GETPOST('address', 'alpha');
-        $result = $object->update($user);
+        $object->longitude = GETPOST('longitude', 'int');
+        $object->latitude = GETPOST('latitude', 'int');
 
-        if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
-    }
-    else if ($action == 'setzip' && !GETPOST('cancel','alpha'))
-    {
-        $object->zip = GETPOST('zip', 'alpha');
-        $result = $object->update($user);
-
-        if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
-        else $object->fetch_thirdparty();
-    }
-    else if ($action == 'settown' && !GETPOST('cancel','alpha'))
-    {
-        $object->town = GETPOST('town', 'alpha');
-        $result = $object->update($user);
-
-        if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
-        else $object->fetch_thirdparty();
-    }
-    else if ($action == 'setlongitude' && !GETPOST('cancel','alpha'))
-    {
-        $object->longitude = GETPOST('longitude', 'alpha');
-        $result = $object->update($user);
-
-        if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
-        else $object->fetch_thirdparty();
-    }
-    else if ($action == 'setlatitude' && !GETPOST('cancel','alpha'))
-    {
-        $object->latitude = GETPOST('latitude', 'alpha');
         $result = $object->update($user);
 
         if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
@@ -233,8 +204,7 @@ if (empty($reshook))
 /*
  *	View
  */
-
-llxHeader('', $langs->trans('Stand'));
+llxHeader('', $langs->trans('Stand'), '', '', 0, 0, array('/stand/js/leaflet.js'), array('/stand/css/leaflet.css'));
 
 $form = new Form($db);
 $formfile = new FormFile($db);
@@ -270,29 +240,10 @@ if ($action == 'create' && $user->rights->stand->creer)
     $doleditor->Create();
     print '</td></tr>';
 
-    // Address
-    print '<tr><td>' . $langs->trans('StandAddress') . '</td><td>';
-    print '<input type="text" size="60"  class="flat" name="address" value="'.GETPOST('address').'">';
-    print '</td></tr>';
-
-    // Zip/Postal code
-    print '<tr><td>' . $langs->trans('StandZip') . '</td><td>';
-    print '<input type="text"  size="60" class="flat" name="zip" value="'.GETPOST('zip').'">';
-    print '</td></tr>';
-
-    // Town
-    print '<tr><td>' . $langs->trans('StandTown') . '</td><td>';
-    print '<input type="text" size="60"  class="flat" name="town" value="'.GETPOST('town').'">';
-    print '</td></tr>';
-
-    // Latitude
-    print '<tr><td>' . $langs->trans('StandLatitude') . '</td><td>';
-    print '<input type="text" size="60" class="flat" name="latitude" value="'.GETPOST('latitude').'">';
-    print '</td></tr>';
-
-    // Longitude
-    print '<tr><td>' . $langs->trans('StandLongitude') . '</td><td>';
-    print '<input type="text"  size="60" class="flat" name="longitude" value="'.GETPOST('longitude').'">';
+    // Latitude/Longitude
+    print '<tr><td>' . $langs->trans('StandLatitudeLongitude') . '</td><td>';
+    print '<input type="text" size="30" class="flat" name="latitude" value="'.GETPOST('latitude').'">';
+    print '&nbsp;<input type="text"  size="60" class="flat" name="longitude" value="'.GETPOST('longitude').'">';
     print '</td></tr>';
 
 	// Other attributes
@@ -402,108 +353,26 @@ if ($action == 'create' && $user->rights->stand->creer)
         print '</td>';
         print '</tr>';
 
-        print '<tr><td>';
-        print '<table class="nobordernopadding" width="100%"><tr><td>';
-        print $langs->trans('StandAddress');
-        print '</td>';
-        if ($action != 'editaddress')
-            print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editaddress&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
-        print '</tr></table>';
-        print '</td><td>';
-        if ($action == 'editaddress') {
-            print '<form name="setname" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
-            print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
-            print '<input type="hidden" name="action" value="setaddress">';
-            print '<input type="text" class="flat" size="60" name="address" value="'.$object->address.'">';
-            print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
-            print '</form>';
-        } else {
-            print $object->address ? $object->address : '&nbsp;';
-        }
-        print '</td>';
-        print '</tr>';
 
         print '<tr><td>';
         print '<table class="nobordernopadding" width="100%"><tr><td>';
-        print $langs->trans('StandZip');
+        print $langs->trans('StandLongitudeLatitude');
         print '</td>';
-        if ($action != 'editzip')
-            print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editzip&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
+        if ($action != 'editgps')
+            print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editgps&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
         print '</tr></table>';
         print '</td><td>';
-        if ($action == 'editzip') {
-            print '<form name="setzip" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
-            print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
-            print '<input type="hidden" name="action" value="setzip">';
-            print '<input type="text" class="flat" size="60" name="zip" value="'.$object->zip.'">';
-            print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
-            print '</form>';
-        } else {
-            print $object->zip ? $object->zip : '&nbsp;';
-        }
-        print '</td>';
-        print '</tr>';
-
-        print '<tr><td>';
-        print '<table class="nobordernopadding" width="100%"><tr><td>';
-        print $langs->trans('StandTown');
-        print '</td>';
-        if ($action != 'edittown')
-            print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=edittown&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
-        print '</tr></table>';
-        print '</td><td>';
-        if ($action == 'edittown') {
-            print '<form name="setname" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
-            print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
-            print '<input type="hidden" name="action" value="settown">';
-            print '<input type="text" class="flat" size="60" name="town" value="'.$object->town.'">';
-            print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
-            print '</form>';
-        } else {
-            print $object->town ? $object->town : '&nbsp;';
-        }
-        print '</td>';
-        print '</tr>';
-
-
-        print '<tr><td>';
-        print '<table class="nobordernopadding" width="100%"><tr><td>';
-        print $langs->trans('StandLatitude');
-        print '</td>';
-        if ($action != 'editlatitude')
-            print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editlatitude&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
-        print '</tr></table>';
-        print '</td><td>';
-        if ($action == 'editlatitude') {
+        if ($action == 'editgps') {
             print '<form name="setlatitude" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
             print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
-            print '<input type="hidden" name="action" value="setlatitude">';
-            print '<input type="text" class="flat" size="60" name="latitude" value="'.$object->latitude.'">';
+            print '<input type="hidden" name="action" value="setgps">';
+            print '<input type="text" class="flat" size="30" id="latitude" name="latitude" value="'.$object->latitude.'">';
+            print '&nbsp;<input type="text" class="flat" size="30" id="longitude" name="longitude" value="'.$object->longitude.'">';
             print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
             print '</form>';
         } else {
-            print $object->latitude ? $object->latitude : '&nbsp;';
-        }
-        print '</td>';
-        print '</tr>';
+            print $object->latitude && $object->longitude ? $object->latitude.','.$object->longitude : '&nbsp;';
 
-        print '<tr><td>';
-        print '<table class="nobordernopadding" width="100%"><tr><td>';
-        print $langs->trans('StandLongitude');
-        print '</td>';
-        if ($action != 'editlongitude')
-            print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editlongitude&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
-        print '</tr></table>';
-        print '</td><td>';
-        if ($action == 'editlongitude') {
-            print '<form name="setlongitude" action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="post">';
-            print '<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">';
-            print '<input type="hidden" name="action" value="setlongitude">';
-            print '<input type="text" class="flat" size="60" name="longitude" value="'.$object->longitude.'">';
-            print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
-            print '</form>';
-        } else {
-            print $object->longitude ? $object->longitude : '&nbsp;';
         }
         print '</td>';
         print '</tr>';
@@ -519,6 +388,9 @@ if ($action == 'create' && $user->rights->stand->creer)
 
         print '<div class="ficheaddleft">';
         print '<div class="underbanner clearboth"></div>';
+
+        print '<div id="stand-map" class="map" style="width:100%; height:400px;"></div>';
+
         print '</div>';
 
         print '</div>';
@@ -574,6 +446,50 @@ if ($action == 'create' && $user->rights->stand->creer)
         print '</div>';
         print '</div>';
 
+        ?>
+
+        <script type="text/javascript">
+            var lat = <?php echo $object->latitude ?: ($conf->global->VELOMA_MAP_LATITUDE ?: 48.852969); ?>;
+            var lon = <?php echo $object->longitude ?: ($conf->global->VELOMA_MAP_LONGITUDE ?: 2.349903); ?>;
+
+            var map = null;
+            var marker = null;
+
+            function initMap() {
+                map = L.map('stand-map').setView([lat, lon], <?php echo $conf->global->VELOMA_MAP_ZOOM ?: 13; ?>);
+                L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                   attribution: 'Données &copy; Contributeurs <a href="http://openstreetmap.org">OpenStreetMap</a> | <a href="https://creativecommons.org/licenses/by/2.0/">CC-BY</a>',
+                   minZoom: 1,
+                   maxZoom: 20
+               }).addTo(map);
+
+                <?php if ($action == 'editgps'): ?>
+                map.on('click', onMapClick);
+                <?php endif; ?>
+
+                <?php if ($object->latitude && $object->longitude): ?>
+                marker = L.marker([<?php echo $object->latitude; ?>, <?php echo $object->longitude; ?>]);
+                marker.addTo(map);
+                <?php endif; ?>
+            }
+
+            function onMapClick(e) {
+                $("#latitude").val(e.latlng.lat);
+                $("#longitude").val(e.latlng.lng);
+
+                if (marker) {
+                     marker.setLatLng(e.latlng);
+                } else {
+                     marker = L.marker(e.latlng);
+                     marker.addTo(map);
+                }
+            }
+
+            $(document).ready(function() {
+                initMap();
+            });
+        </script>
+        <?php
 	}
 }
 

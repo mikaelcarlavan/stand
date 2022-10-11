@@ -98,24 +98,6 @@ class Stand extends CommonObject
     public $description;
 
     /**
-     * Address.
-     * @var string
-     */
-    public $address;
-
-    /**
-     * Zip/postal code.
-     * @var string
-     */
-    public $zip;
-
-    /**
-     * Town.
-     * @var string
-     */
-    public $town;
-
-    /**
      * Longitude.
      * @var double
      */
@@ -198,9 +180,6 @@ class Stand extends CommonObject
         'ref' =>array('type'=>'varchar(30)', 'label'=>'Ref', 'enabled'=>1, 'visible'=>-1, 'notnull'=>1, 'showoncombobox'=>1, 'position'=>20),
 		'name' =>array('type'=>'varchar(255)', 'label'=>'StandName', 'enabled'=>1, 'visible'=>1, 'position'=>25),
 		'description' =>array('type'=>'varchar(255)', 'label'=>'StandDescription', 'enabled'=>1, 'visible'=>1, 'position'=>30),
-		'address' =>array('type'=>'varchar(255)', 'label'=>'StandAddress', 'enabled'=>1, 'visible'=>0, 'position'=>35),
-		'zip' =>array('type'=>'varchar(255)', 'label'=>'StandZip', 'enabled'=>1, 'visible'=>0, 'position'=>30),
-        'town' =>array('type'=>'varchar(255)', 'label'=>'StandTown', 'enabled'=>1, 'visible'=>0, 'position'=>45),
         'longitude' =>array('type'=>'double', 'label'=>'StandLongitude', 'enabled'=>1, 'visible'=>1, 'position'=>50),
         'latitude' =>array('type'=>'double', 'label'=>'StandLatitude', 'enabled'=>1, 'visible'=>1, 'position'=>55),
         'active' =>array('type'=>'smallint(6)', 'label'=>'StandActive', 'enabled'=>1, 'visible'=>1, 'position'=>65),
@@ -280,9 +259,6 @@ class Stand extends CommonObject
             $sql.= " ref";
             $sql.= " , name";
             $sql.= " , description";
-            $sql.= " , address";
-            $sql.= " , zip";
-            $sql.= " , town";
             $sql.= " , longitude";
             $sql.= " , latitude";
             $sql.= " , datec";
@@ -294,9 +270,6 @@ class Stand extends CommonObject
             $sql.= " ".(!empty($this->ref) ? "'".$this->db->escape($this->ref)."'" : "null");
             $sql.= ", ".(!empty($this->name) ? "'".$this->db->escape($this->name)."'" : "null");
             $sql.= ", ".(!empty($this->description) ? "'".$this->db->escape($this->description)."'" : "null");
-            $sql.= ", ".(!empty($this->address) ? "'".$this->db->escape($this->address)."'" : "null");
-            $sql.= ", ".(!empty($this->zip) ? "'".$this->db->escape($this->zip)."'" : "null");
-            $sql.= ", ".(!empty($this->town) ? "'".$this->db->escape($this->town)."'" : "null");
             $sql.= ", ".(!empty($this->longitude) ? $this->longitude : "0");
             $sql.= ", ".(!empty($this->latitude) ? $this->latitude : "0");
             $sql.= ", ".(!empty($this->datec) ? "'".$this->db->idate($this->datec)."'" : "null");
@@ -395,9 +368,6 @@ class Stand extends CommonObject
 		$sql.= " SET ref = ".(!empty($this->ref) ? "'".$this->db->escape($this->ref)."'" : "null");
 		$sql.= ", name = ".(!empty($this->name) ? "'".$this->db->escape($this->name)."'" : "null");
 		$sql.= ", description = ".(!empty($this->description) ? "'".$this->db->escape($this->description)."'" : "null");
-        $sql.= ", address = ".(!empty($this->address) ? "'".$this->db->escape($this->address)."'" : "null");
-        $sql.= ", zip = ".(!empty($this->zip) ? "'".$this->db->escape($this->zip)."'" : "null");
-        $sql.= ", town = ".(!empty($this->town) ? "'".$this->db->escape($this->town)."'" : "null");
         $sql.= ", latitude = ".(!empty($this->latitude) ? $this->latitude : "0");
         $sql.= ", longitude = ".(!empty($this->longitude) ? $this->longitude : "0");
         $sql.= ", active = ".(!empty($this->active) ? $this->active : "0");
@@ -451,7 +421,7 @@ class Stand extends CommonObject
             return -1;
         }
 
-		$sql = "SELECT e.rowid, e.ref, e.datec, e.active, e.tms, e.name, e.description, e.address, e.zip, e.town, e.latitude, ";
+		$sql = "SELECT e.rowid, e.ref, e.datec, e.active, e.tms, e.name, e.description, e.latitude, ";
 		$sql.= " e.longitude, e.user_author_id, e.entity ";
 		$sql.= " FROM ".MAIN_DB_PREFIX."stand e";
         if ($id > 0) {
@@ -476,9 +446,6 @@ class Stand extends CommonObject
 
                 $this->name 		    = $obj->name;
 				$this->description 	    = $obj->description;
-                $this->address 	        = $obj->address;
-				$this->zip 	    = $obj->zip;
-				$this->town 	        = $obj->town;
 				$this->longitude 	    = $obj->longitude;
                 $this->latitude 	    = $obj->latitude;
 
@@ -503,20 +470,104 @@ class Stand extends CommonObject
 		}
 	}
 
-	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
-	/**
-	 *	Load array lines
-	 *
-	 *	@return		int						<0 if KO, >0 if OK
-	 */
-	public function fetch_lines()
-	{
-		global $langs, $conf;
-		// phpcs:enable
-		$this->lines = array();
+    // phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
+    /**
+     *	Load array lines
+     *
+     *	@return		int						<0 if KO, >0 if OK
+     */
+    public function fetch_lines()
+    {
+        global $langs, $conf;
+        // phpcs:enable
+        $this->lines = array();
 
-        return 1;
-	}
+        $sql = "SELECT e.rowid as id, e.ref, e.datec";
+        $sql.= " FROM ".MAIN_DB_PREFIX."bike as e";
+        $sql.= " WHERE e.entity IN (".getEntity('bike').")";
+        $sql.= " AND e.fk_stand = ".$this->id;
+
+        $result=$this->db->query($sql);
+        if ($result)
+        {
+            $num = $this->db->num_rows($result);
+            if ($num)
+            {
+                $i = 0;
+                while ($i < $num)
+                {
+                    $obj = $this->db->fetch_object($result);
+
+                    $bike = new Bike($this->db);
+                    $bike->fetch($obj->id);
+
+                    $this->lines[$i] = $bike;
+
+                    $i++;
+                }
+            }
+            return 1;
+        }
+        else
+        {
+            dol_print_error($this->db);
+            return -1;
+        }
+
+        $sql = 'SELECT l.rowid, l.fk_bike, l.note, l.fk_user, l.user_author_id, l.datec, l.tms ';
+        $sql .= ' FROM '.MAIN_DB_PREFIX.'bikedet as l';
+        $sql .= ' WHERE l.fk_bike = '.$this->id;
+        $sql .= ' ORDER BY l.rowid';
+
+        dol_syslog(get_class($this)."::fetch_lines", LOG_DEBUG);
+        $result = $this->db->query($sql);
+
+        if ($result) {
+            $num = $this->db->num_rows($result);
+
+            $i = 0;
+            while ($i < $num) {
+                $objp = $this->db->fetch_object($result);
+
+                $line = new BikeLine($this->db);
+
+                $line->rowid            = $objp->rowid;
+                $line->id               = $objp->rowid;
+                $line->fk_bike          = $objp->fk_bike;
+                $line->fk_user          = $objp->fk_user;
+                $line->note            = $objp->note;
+
+                $this->user_author_id 	= $objp->user_author_id;
+                $this->datec 			= $this->db->jdate($objp->datec);
+                $this->tms 			    = $this->db->jdate($objp->tms);
+
+                $line->user = new User($this->db);
+                $line->user->fetch($line->fk_user);
+
+                $line->fetch_optionals();
+
+                $this->lines[$i] = $line;
+                $i++;
+            }
+
+            $this->db->free($result);
+
+            return 1;
+        } else {
+            $this->error = $this->db->error();
+            return -3;
+        }
+    }
+
+    /**
+     * 	Create an array of order lines
+     *
+     * 	@return int		>0 if OK, <0 if KO
+     */
+    function getLinesArray()
+    {
+        return $this->fetch_lines();
+    }
 
 	/**
 	 *  Delete a gestion from database (if not used)

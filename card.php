@@ -14,7 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 /**
  * \file 	htdocs/stand/card.php
  * \ingroup stand
@@ -162,7 +164,7 @@ if (empty($reshook))
         if ($result < 0) setEventMessages($object->error, $object->errors, 'errors');
         else $object->fetch_thirdparty();
     }
-    else if ($action == 'confirm_deleteline' && $confirm == 'yes' && $user->rights->stand->creer)
+    else if ($action == 'confirm_deletebike' && $confirm == 'yes' && $user->rights->stand->creer)
     {
         // Remove a product line
         $bike = new Bike($db);
@@ -178,7 +180,8 @@ if (empty($reshook))
         } else {
             setEventMessages($object->error, $object->errors, 'errors');
         }
-    } elseif ($action == 'addline' && $user->rights->bike->creer) {		// Add a new line
+    }
+    elseif ($action == 'addbike' && $user->rights->bike->creer) {		// Add a new line
         $langs->load('errors');
         $error = 0;
 
@@ -197,11 +200,69 @@ if (empty($reshook))
 
             if ($result > 0) {
                 unset($_POST['fk_bike']);
+                $ret = $object->fetch($object->id); // Reload to get new records
             } else {
                 setEventMessages($object->error, $object->errors, 'errors');
             }
 
         }
+    }
+    else if ($action == 'confirm_deleteline' && $confirm == 'yes' && $user->rights->stand->creer)
+    {
+        // Remove a product line
+        $result = $object->deleteline($user, $lineid);
+        if ($result > 0) {
+            header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+            exit;
+        } else {
+            setEventMessages($object->error, $object->errors, 'errors');
+        }
+    } elseif ($action == 'addline' && $user->rights->stand->creer) {		// Add a new line
+        $langs->load('errors');
+        $error = 0;
+
+        // Set if we used free entry or predefined product
+        $note = (GETPOSTISSET('note') ? GETPOST('note', 'restricthtml') : '');
+        $fk_user = GETPOST('fk_user', 'int');
+
+        if (!$error) {
+
+            // Insert line
+            $result = $object->addline($note, $fk_user);
+
+            if ($result > 0) {
+                $ret = $object->fetch($object->id); // Reload to get new records
+
+                unset($_POST['note']);
+                unset($_POST['fk_user']);
+
+            } else {
+                setEventMessages($object->error, $object->errors, 'errors');
+            }
+
+        }
+    }
+    elseif ($action == 'updateline' && $user->rights->stand->creer && !$cancel)
+    {
+        // Update a line
+        $note = (GETPOSTISSET('note') ? GETPOST('note', 'restricthtml') : '');
+        $fk_user = GETPOST('fk_user', 'int');
+
+        $result = $object->updateline(GETPOST('lineid', 'int'), $note, $fk_user);
+
+        if ($result >= 0) {
+            unset($_POST['note']);
+            unset($_POST['fk_user']);
+            $ret = $object->fetch($object->id); // Reload to get new records
+        } else {
+            setEventMessages($object->error, $object->errors, 'errors');
+        }
+
+    }
+    elseif ($action == 'updateline' && $user->rights->stand->creer && $cancel)
+    {
+        header('Location: '.$_SERVER['PHP_SELF'].'?id='.$object->id); // Pour reaffichage de la fiche en cours d'edition
+        exit();
     }
 
 
@@ -255,7 +316,7 @@ $formproject = new FormProjets($db);
 // Mode creation
 if ($action == 'create' && $user->rights->stand->creer)
 {
-	print load_fiche_titre($langs->trans('NewStand'),'','stand@stand');
+	print load_fiche_titre($langs->trans('NewStand'),'','stand2@stand');
 
 
 	print '<form name="crea_stand" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
@@ -319,7 +380,7 @@ if ($action == 'create' && $user->rights->stand->creer)
 
 		$head = stand_prepare_head($object);
 		
-		dol_fiche_head($head, 'stand', $langs->trans("Stand"), -1, 'stand@stand');
+		dol_fiche_head($head, 'stand', $langs->trans("Stand"), -1, 'stand2@stand');
 
 		$formconfirm = '';
 
@@ -327,6 +388,10 @@ if ($action == 'create' && $user->rights->stand->creer)
 		if ($action == 'delete') {
 			$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"] . '?id=' . $object->id, $langs->trans('DeleteStand'), $langs->trans('ConfirmDeleteStand'), 'confirm_delete', '', 0, 1);
 		}
+
+        if ($action == 'ask_deletebike') {
+            $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteStandBike'), $langs->trans('ConfirmDeleteStandBike'), 'confirm_deletebike', '', 0, 1);
+        }
 
         if ($action == 'ask_deleteline') {
             $formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&lineid='.$lineid, $langs->trans('DeleteStandLine'), $langs->trans('ConfirmDeleteStandLine'), 'confirm_deleteline', '', 0, 1);
@@ -416,7 +481,7 @@ if ($action == 'create' && $user->rights->stand->creer)
             print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '">';
             print '</form>';
         } else {
-            print $object->latitude && $object->longitude ? $object->latitude.','.$object->longitude : '&nbsp;';
+            print $object->latitude && $object->longitude ? $object->latitude.', '.$object->longitude : '&nbsp;';
 
         }
         print '</td>';
@@ -448,6 +513,42 @@ if ($action == 'create' && $user->rights->stand->creer)
                  * Lines
                  */
         $result = $object->getLinesArray();
+
+        print '<form name="addbike" id="addbike" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editbike') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
+		<input type="hidden" name="token" value="' . newToken().'">
+		<input type="hidden" name="action" value="' . (($action != 'editbike') ? 'addbike' : 'updatebike').'">
+		<input type="hidden" name="mode" value="">
+		<input type="hidden" name="page_y" value="">
+		<input type="hidden" name="id" value="' . $object->id.'">';
+
+        print '<div class="div-table-responsive-no-min">';
+        print '<table id="tablebikes" class="noborder noshadow" width="100%">';
+
+        if (!empty($object->bikes)) {
+            $ret = $object->printObjectBikes($action, $mysoc, $object->thirdparty, $lineid, 1);
+        }
+
+        $numlines = count($object->bikes);
+
+        /*
+         * Form to add new line
+         */
+        if ($user->rights->bike->creer && $action != 'selectbikes') {
+            if ($action != 'editbike') {
+                // Add products
+                $parameters = array();
+                // Note that $action and $object may be modified by hook
+                $reshook = $hookmanager->executeHooks('formAddObjectBike', $parameters, $object, $action);
+                if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+                if (empty($reshook))
+                    $object->formAddObjectBike(1, $mysoc, $object->thirdparty);
+            }
+        }
+        print '</table>';
+        print '</div>';
+
+        print "</form>";
+
 
         print '<form name="addline" id="addline" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.(($action != 'editline') ? '' : '#line_'.GETPOST('lineid', 'int')).'" method="POST">
 		<input type="hidden" name="token" value="' . newToken().'">
@@ -534,14 +635,14 @@ if ($action == 'create' && $user->rights->stand->creer)
         ?>
 
         <script type="text/javascript">
-            var lat = <?php echo $object->latitude ?: ($conf->global->VELOMA_MAP_LATITUDE ?: 48.852969); ?>;
-            var lon = <?php echo $object->longitude ?: ($conf->global->VELOMA_MAP_LONGITUDE ?: 2.349903); ?>;
+            var lat = <?php echo $object->latitude ?: (!empty($conf->global->VELOMA_MAP_LATITUDE) ? $conf->global->VELOMA_MAP_LATITUDE : 48.852969); ?>;
+            var lon = <?php echo $object->longitude ?: (!empty($conf->global->VELOMA_MAP_LONGITUDE) ? $conf->global->VELOMA_MAP_LONGITUDE : 2.349903); ?>;
 
             var map = null;
             var marker = null;
 
             function initMap() {
-                map = L.map('stand-map').setView([lat, lon], <?php echo $conf->global->VELOMA_MAP_ZOOM ?: 13; ?>);
+                map = L.map('stand-map').setView([lat, lon], <?php echo !empty($conf->global->VELOMA_MAP_ZOOM) ? $conf->global->VELOMA_MAP_ZOOM : 13; ?>);
                 L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
                    attribution: 'Données &copy; Contributeurs <a href="http://openstreetmap.org">OpenStreetMap</a> | <a href="https://creativecommons.org/licenses/by/2.0/">CC-BY</a>',
                    minZoom: 1,

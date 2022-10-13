@@ -57,7 +57,7 @@ llxHeader('', $langs->trans('Stand'));
 $object->info($object->id);
 
 $head = stand_prepare_head($object);
-dol_fiche_head($head, 'info', $langs->trans("Stand"), 0, 'stand@stand');
+dol_fiche_head($head, 'info', $langs->trans("Stand"), 0, 'stand2@stand');
 
 // Order card
 

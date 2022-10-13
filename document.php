@@ -92,7 +92,7 @@ if ($id > 0 || ! empty($ref))
 		$upload_dir = $conf->stand->dir_output.'/'.dol_sanitizeFileName($object->ref);
 
 		$head = stand_prepare_head($object);
-		dol_fiche_head($head, 'documents', $langs->trans('Stand'), 0, 'stand@stand');
+		dol_fiche_head($head, 'documents', $langs->trans('Stand'), 0, 'stand2@stand');
 
 		// Build file list
 		$filearray=dol_dir_list($upload_dir,"files",0,'','(\.meta|_preview.*\.png)$',$sortfield,(strtolower($sortorder)=='desc'?SORT_DESC:SORT_ASC),1);

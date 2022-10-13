@@ -80,6 +80,7 @@ StandZip = Code postal
 StandLongitude = Longitude
 StandLatitude = Latitude
 StandBike = Vélo
+StandTag = Dégradation
 StandAddBike = Ajouter un vélo
 StandLongitudeLatitude = Latitude/longitude
 DateCreation = Date de création
@@ -101,8 +102,10 @@ SelectStand = Merci de sélectionner une station
 ConfirmDeleteStand = Êtes-vous sûr de vouloir effacer cette station ?
 SearchIntoStands = Stands
 SendStandRef = Envoi de la station
-ConfirmDeleteStandLine = Êtes-vous sûr de vouloir supprimer ce vélo de la station ?
-DeleteStandLine = Supprimer vélo de la station
+ConfirmDeleteStandBike = Êtes-vous sûr de vouloir supprimer ce vélo de la station ?
+DeleteStandBike = Supprimer vélo de la station
+ConfirmDeleteStandLine = Êtes-vous sûr de vouloir supprimer cette dégradation de la station ?
+DeleteStandLine = Supprimer dégradation de la station
 #
 StandStatusValidated = Validée
 StandStatusValidatedShort = Validée
@@ -120,4 +123,7 @@ ErrorWhileUpdatingStand = Erreur lors de la mise à jour de la station.
 StandHasBeenCreated = Votre station %s a bien été enregistrée.
 StandAlreadyExists = Une station avec cette référence existe déjà.
 
-
+#
+StandAddTag = Ajouter une dégradation
+StandAddDate = Date d'ajout
+StandUser = Utilisateur

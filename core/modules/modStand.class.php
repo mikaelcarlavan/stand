@@ -77,7 +77,7 @@ class modStand extends DolibarrModules
 		// Name of image file used for this module.
 		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
 		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
-		$this->picto='stand@stand';
+		$this->picto='stand2@stand';
 
 		// Defined all module parts (triggers, login, substitutions, menus, css, etc...)
 		// for default path (eg: /stand/core/xxxxx) (0=disable, 1=enable)
@@ -179,10 +179,10 @@ class modStand extends DolibarrModules
 
 
         $this->menu[$r]=array(
-            'fk_menu'=>'fk_mainmenu=bike',			// Put 0 if this is a top menu
+            'fk_menu'=>'fk_mainmenu=veloma',			// Put 0 if this is a top menu
         	'type'=> 'left',			// This is a Top menu entry
         	'titre'=> $langs->trans('Stands'),
-        	'mainmenu'=> 'bike',
+        	'mainmenu'=> 'veloma',
         	'leftmenu'=> 'stands',		// Use 1 if you also want to add left menu entries using this descriptor. Use 0 if left menu entries are defined in a file pre.inc.php (old school).
 			'url'=> '/stand/index.php',
 			'langs'=> 'stand@stand',	// Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
@@ -195,10 +195,10 @@ class modStand extends DolibarrModules
 		
 		$r++;
         $this->menu[$r]=array(
-            'fk_menu'=>'fk_mainmenu=bike,fk_leftmenu=stands',			// Put 0 if this is a top menu
+            'fk_menu'=>'fk_mainmenu=veloma,fk_leftmenu=stands',			// Put 0 if this is a top menu
         	'type'=> 'left',			// This is a Top menu entry
         	'titre'=> $langs->trans('StandsNew'),
-        	'mainmenu'=> 'bike',
+        	'mainmenu'=> 'veloma',
         	'leftmenu'=> 'stands_nouveau',		// Use 1 if you also want to add left menu entries using this descriptor. Use 0 if left menu entries are defined in a file pre.inc.php (old school).
 			'url'=> '/stand/card.php?action=create',
 			'langs'=> 'stand@stand',	// Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
@@ -211,10 +211,10 @@ class modStand extends DolibarrModules
 		
 		$r++;
         $this->menu[$r]=array(
-            'fk_menu'=>'fk_mainmenu=bike,fk_leftmenu=stands',			// Put 0 if this is a top menu
+            'fk_menu'=>'fk_mainmenu=veloma,fk_leftmenu=stands',			// Put 0 if this is a top menu
         	'type'=> 'left',			// This is a Top menu entry
         	'titre'=> $langs->trans('StandsList'),
-        	'mainmenu'=> 'bike',
+        	'mainmenu'=> 'veloma',
         	'leftmenu'=> 'stands_liste',		// Use 1 if you also want to add left menu entries using this descriptor. Use 0 if left menu entries are defined in a file pre.inc.php (old school).
 			'url'=> '/stand/list.php',
 			'langs'=> 'stand@stand',	// Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.

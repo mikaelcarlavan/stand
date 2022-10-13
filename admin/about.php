@@ -67,7 +67,7 @@ dol_fiche_head(
 	'about',
 	$langs->trans("ModuleStandName"),
 	0,
-	'stand@stand'
+	'stand2@stand'
 );
 
 // About page goes here

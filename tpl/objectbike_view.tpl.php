@@ -61,28 +61,17 @@ $domData .= ' data-id="'.$line->id.'"';
 
 	<td class="linecoldescription minwidth300imp"><div id="line_<?php print $line->id; ?>"></div>
 	<?php
-	print dol_nl2br($line->note);
+	print $line->getNomUrl(1).' - '.$line->name;
 	?>
     </td>
 
-	<td class="linecolfkuser nowrap right">
-    <?php print $line->fk_user > 0 ? $line->user->getNomUrl(1) : '&nbsp;'; ?>
-    </td>
-
-	<td class="linecoldatec nowrap right">
-    <?php print $line->datec > 0 ? dol_print_date($line->datec, '%d/%m/%Y') : '&nbsp;'; ?>
-    </td>
-
-<?php if ($this->statut == 0 && !empty($object_rights->creer) && $action != 'selectlines') {
+<?php if ($this->statut == 0 && !empty($object_rights->creer) && $action != 'selectbikes') {
 
 	print '<td class="linecoledit right">';
-	?>
-	<a class="editfielda reposition" href="<?php print $_SERVER["PHP_SELF"].'?id='.$this->id.'&amp;action=editline&amp;lineid='.$line->id.'#line_'.$line->id; ?>">
-	<?php print img_edit().'</a>';
 	print '</td>';
 
 	print '<td class="linecoldelete right">';
-    print '<a class="reposition" href="'.$_SERVER["PHP_SELF"].'?id='.$this->id.'&amp;action=ask_deleteline&amp;lineid='.$line->id.'">';
+    print '<a class="reposition" href="'.$_SERVER["PHP_SELF"].'?id='.$this->id.'&amp;action=ask_deletebike&amp;lineid='.$line->id.'">';
     print img_delete();
     print '</a>';
 
@@ -93,7 +82,7 @@ $domData .= ' data-id="'.$line->id.'"';
 	print '<td colspan="3"></td>';
 }
 
-if ($action == 'selectlines') { ?>
+if ($action == 'selectbikes') { ?>
 	<td class="linecolcheck right"><input type="checkbox" class="linecheckbox" name="line_checkbox[<?php print $i + 1; ?>]" value="<?php print $line->id; ?>" ></td>
 <?php }
 

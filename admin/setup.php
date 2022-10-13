@@ -118,7 +118,7 @@ dol_fiche_head(
 	'settings',
 	$langs->trans("ModuleStandName"),
 	0,
-	"stand@stand"
+	"stand2@stand"
 );
 
 $form = new Form($db);

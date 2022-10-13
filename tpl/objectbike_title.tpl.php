@@ -52,13 +52,7 @@ if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 }
 
 // Description
-print '<td class="linecoldescription">'.$langs->trans('StandTag').'</td>';
-
-// User
-print '<td class="linecolfkuser right">'.$langs->trans('StandUser').'</td>';
-
-// Date
-print '<td class="linecoldatec right">'.$langs->trans('StandAddDate').'</td>';
+print '<td class="linecoldescription">'.$langs->trans('StandBike').'</td>';
 
 
 print '<td class="linecoledit"></td>'; // No width to allow autodim
@@ -67,7 +61,7 @@ print '<td class="linecoldelete" style="width: 10px"></td>';
 
 print '<td class="linecolmove" style="width: 10px"></td>';
 
-if ($action == 'selectlines') {
+if ($action == 'selectbikes') {
 	print '<td class="linecolcheckall center">';
 	print '<input type="checkbox" class="linecheckboxtoggle" />';
 	print '<script>$(document).ready(function() {$(".linecheckboxtoggle").click(function() {var checkBoxes = $(".linecheckbox");checkBoxes.prop("checked", this.checked);})});</script>';

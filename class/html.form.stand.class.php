@@ -58,7 +58,7 @@ class StandForm
         $select = '<select class="flat" id = "'.$htmlname.'" name = "'.$htmlname.'" '.$htmloption.'>';
         if ($useempty) 
         {
-            $select .= '<option value="">&nbsp;</option>';
+            $select .= '<option value="-1">&nbsp;</option>';
         }
         foreach ($stands as $id => $stand)
         {

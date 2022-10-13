@@ -327,7 +327,7 @@ if ($resql) {
     print '<input type="hidden" name="contextpage" value="' . $contextpage . '">';
 
 
-    print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, $nbtotalofrecords, 'stand@stand', 0, $newcardbutton, '', $limit);
+    print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, $nbtotalofrecords, 'stand2@stand', 0, $newcardbutton, '', $limit);
 
     $topicmail = "SendStandRef";
     $modelmail = "stand_send";
@@ -472,7 +472,6 @@ if ($resql) {
 
         $generic_stand->id = $obj->rowid;
         $generic_stand->ref = $obj->ref;
-        $generic_stand->datec = $db->jdate($obj->datec);
 
 
         print '<tr class="oddeven">';

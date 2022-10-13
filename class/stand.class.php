@@ -62,7 +62,7 @@ class Stand extends CommonObject
 	/**
 	 * @var string String with name of icon for commande class. Here is object_order.png
 	 */
-	public $picto = 'stand@stand';
+	public $picto = 'stand2@stand';
 
 	/**
 	 * 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
@@ -141,11 +141,16 @@ class Stand extends CommonObject
 	public $entity;
 
     /**
-     * Entity
-     * @var array
+     * Tags/lines
+     * @var StandLine[]
      */
     public $lines = array();
 
+    /**
+     * Bikes
+     * @var Bike[]
+     */
+    public $bikes = array();
 
 	/**
 	 *  'type' if the field format ('integer', 'integer:ObjectClass:PathToClass[:AddCreateButtonOrNot[:Filter]]', 'varchar(x)', 'double(24,8)', 'real', 'price', 'text', 'html', 'date', 'datetime', 'timestamp', 'duration', 'mail', 'phone', 'url', 'password')
@@ -483,6 +488,50 @@ class Stand extends CommonObject
         // phpcs:enable
         $this->lines = array();
 
+        $sql = 'SELECT l.rowid, l.fk_stand, l.note, l.fk_user, l.user_author_id, l.datec, l.tms ';
+        $sql .= ' FROM '.MAIN_DB_PREFIX.'standdet as l';
+        $sql .= ' WHERE l.fk_stand = '.$this->id;
+        $sql .= ' ORDER BY l.rowid';
+
+        dol_syslog(get_class($this)."::fetch_lines", LOG_DEBUG);
+        $result = $this->db->query($sql);
+
+        if ($result) {
+            $num = $this->db->num_rows($result);
+
+            $i = 0;
+            while ($i < $num) {
+                $objp = $this->db->fetch_object($result);
+
+                $line = new StandLine($this->db);
+
+                $line->rowid            = $objp->rowid;
+                $line->id               = $objp->rowid;
+                $line->fk_stand          = $objp->fk_stand;
+                $line->fk_user          = $objp->fk_user;
+                $line->note            = $objp->note;
+
+                $line->user_author_id 	= $objp->user_author_id;
+                $line->datec 			= $this->db->jdate($objp->datec);
+                $line->tms 			    = $this->db->jdate($objp->tms);
+
+                $line->user = new User($this->db);
+                $line->user->fetch($line->fk_user);
+
+                $line->fetch_optionals();
+
+                $this->lines[$i] = $line;
+                $i++;
+            }
+
+            $this->db->free($result);
+        } else {
+            $this->error = $this->db->error();
+            return -3;
+        }
+
+        $this->bikes = array();
+
         $sql = "SELECT e.rowid as id, e.ref, e.datec";
         $sql.= " FROM ".MAIN_DB_PREFIX."bike as e";
         $sql.= " WHERE e.entity IN (".getEntity('bike').")";
@@ -502,18 +551,19 @@ class Stand extends CommonObject
                     $bike = new Bike($this->db);
                     $bike->fetch($obj->id);
 
-                    $this->lines[$i] = $bike;
+                    $this->bikes[$i] = $bike;
 
                     $i++;
                 }
             }
-            return 1;
         }
         else
         {
             dol_print_error($this->db);
             return -1;
         }
+
+        return 1;
     }
 
     /**
@@ -525,6 +575,155 @@ class Stand extends CommonObject
     {
         return $this->fetch_lines();
     }
+
+    /**
+     *	Show add free and predefined products/services form
+     *
+     *  @param	int		        $dateSelector       1=Show also date range input fields
+     *  @param	Societe			$seller				Object thirdparty who sell
+     *  @param	Societe			$buyer				Object thirdparty who buy
+     *  @param	string			$defaulttpldir		Directory where to find the template
+     *	@return	void
+     */
+    public function formAddObjectBike($dateSelector, $seller, $buyer, $defaulttpldir = '/core/tpl')
+    {
+        global $conf, $user, $langs, $object, $hookmanager, $extrafields;
+        global $form;
+
+        if (!empty($conf->bike->enabled)) {
+            $bikeform = new BikeForm($this->db);
+        }
+
+        // Line extrafield
+        if (!is_object($extrafields)) {
+            require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+            $extrafields = new ExtraFields($this->db);
+        }
+        $extrafields->fetch_name_optionals_label($this->table_element_line);
+
+        // Output template part (modules that overwrite templates must declare this into descriptor)
+        // Use global variables + $dateSelector + $seller and $buyer
+        // Note: This is deprecated. If you need to overwrite the tpl file, use instead the hook 'formAddObjectLine'.
+        $tpl = dol_buildpath('stand/tpl/objectbike_create.tpl.php');
+
+        if (empty($conf->file->strict_mode)) {
+            $res = @include $tpl;
+        } else {
+            $res = include $tpl; // for debug
+        }
+    }
+
+    /**
+     *	Return HTML table for object lines
+     *	TODO Move this into an output class file (htmlline.class.php)
+     *	If lines are into a template, title must also be into a template
+     *	But for the moment we don't know if it's possible as we keep a method available on overloaded objects.
+     *
+     *	@param	string		$action				Action code
+     *	@param  string		$seller            	Object of seller third party
+     *	@param  string  	$buyer             	Object of buyer third party
+     *	@param	int			$selected		   	Object line selected
+     *	@param  int	    	$dateSelector      	1=Show also date range input fields
+     *  @param	string		$defaulttpldir		Directory where to find the template
+     *	@return	void
+     */
+    public function printObjectBikes($action, $seller, $buyer, $selected = 0, $dateSelector = 0, $defaulttpldir = '/core/tpl')
+    {
+        global $conf, $hookmanager, $langs, $user, $form, $extrafields, $object;
+        // TODO We should not use global var for this
+        global $inputalsopricewithtax, $usemargins, $disableedit, $disablemove, $disableremove, $outputalsopricetotalwithtax;
+
+        $num = count($this->lines);
+
+        // Line extrafield
+        if (!is_object($extrafields)) {
+            require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+            $extrafields = new ExtraFields($this->db);
+        }
+        $extrafields->fetch_name_optionals_label($this->table_element_line);
+
+        $parameters = array('num'=>$num, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$this->table_element_line);
+        $reshook = $hookmanager->executeHooks('printObjectLineTitle', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+        if (empty($reshook)) {
+
+            $tpl = dol_buildpath('stand/tpl/objectbike_title.tpl.php');
+
+            if (empty($conf->file->strict_mode)) {
+                $res = @include $tpl;
+            } else {
+                $res = include $tpl; // for debug
+            }
+        }
+
+        $i = 0;
+
+        print "<!-- begin printObjectBikes() --><tbody>\n";
+        foreach ($this->bikes as $line) {
+            //Line extrafield
+            $line->fetch_optionals();
+
+            //if (is_object($hookmanager) && (($line->product_type == 9 && ! empty($line->special_code)) || ! empty($line->fk_parent_line)))
+            if (is_object($hookmanager)) {   // Old code is commented on preceding line.
+                $parameters = array('line'=>$line, 'num'=>$num, 'i'=>$i, 'dateSelector'=>$dateSelector, 'seller'=>$seller, 'buyer'=>$buyer, 'selected'=>$selected, 'table_element_line'=>$line->table_element);
+                $reshook = $hookmanager->executeHooks('printObjectBike', $parameters, $this, $action); // Note that $action and $object may have been modified by some hooks
+            }
+            if (empty($reshook)) {
+                $this->printObjectBike($action, $line, '', $num, $i, $dateSelector, $seller, $buyer, $selected, $extrafields, $defaulttpldir);
+            }
+
+            $i++;
+        }
+        print "</tbody><!-- end printObjectBikes() -->\n";
+    }
+
+    /**
+     *	Return HTML content of a detail line
+     *	TODO Move this into an output class file (htmlline.class.php)
+     *
+     *	@param	string      		$action				GET/POST action
+     *	@param  CommonObjectLine 	$line			    Selected object line to output
+     *	@param  string	    		$var               	Is it a an odd line (true)
+     *	@param  int		    		$num               	Number of line (0)
+     *	@param  int		    		$i					I
+     *	@param  int		    		$dateSelector      	1=Show also date range input fields
+     *	@param  string	    		$seller            	Object of seller third party
+     *	@param  string	    		$buyer             	Object of buyer third party
+     *	@param	int					$selected		   	Object line selected
+     *  @param  Extrafields			$extrafields		Object of extrafields
+     *  @param	string				$defaulttpldir		Directory where to find the template (deprecated)
+     *	@return	void
+     */
+    public function printObjectBike($action, $line, $var, $num, $i, $dateSelector, $seller, $buyer, $selected = 0, $extrafields = null, $defaulttpldir = '/core/tpl')
+    {
+        global $conf, $langs, $user, $object, $hookmanager;
+        global $form;
+        global $object_rights, $disableedit, $disablemove, $disableremove; // TODO We should not use global var for this !
+
+        $object_rights = $this->getRights();
+
+        $element = $this->element;
+
+        $text = '';
+        $description = '';
+
+
+        if (!empty($conf->bike->enabled)) {
+            $bikeform = new BikeForm($this->db);
+        }
+
+        // Line in view mode
+        $label = $line->name;
+
+        $tpl = dol_buildpath('stand/tpl/objectbike_view.tpl.php');
+
+        if (empty($conf->file->strict_mode)) {
+            $res = @include $tpl;
+        } else {
+            $res = include $tpl; // for debug
+        }
+    }
+
+
 
     /**
      *	Show add free and predefined products/services form
@@ -656,24 +855,149 @@ class Stand extends CommonObject
         $text = '';
         $description = '';
 
-
-        if (!empty($conf->bike->enabled)) {
-            $bikeform = new BikeForm($this->db);
-        }
-
         // Line in view mode
-        $label = $line->name;
+        if ($action != 'editline' || $selected != $line->id) {
+            $label = $line->note;
 
-        $tpl = dol_buildpath('stand/tpl/objectline_view.tpl.php');
+            $tpl = dol_buildpath('stand/tpl/objectline_view.tpl.php');
 
-        if (empty($conf->file->strict_mode)) {
-            $res = @include $tpl;
-        } else {
-            $res = include $tpl; // for debug
+            if (empty($conf->file->strict_mode)) {
+                $res = @include $tpl;
+            } else {
+                $res = include $tpl; // for debug
+            }
         }
 
+        // Line in update mode
+        if ($action == 'editline' && $selected == $line->id) {
+            $label = $line->note;
 
+            $tpl = dol_buildpath('stand/tpl/objectline_edit.tpl.php');
+
+            if (empty($conf->file->strict_mode)) {
+                $res = @include $tpl;
+            } else {
+                $res = include $tpl; // for debug
+            }
+        }
     }
+
+
+    /**
+     *    Add a stand line into database (linked to product/service or not)
+     *
+     * @param $note
+     * @return     int                                >0 if OK, <0 if KO
+     */
+    public function addline($note, $fk_user = -1)
+    {
+        global $mysoc, $conf, $langs, $user;
+
+        $logtext = "::addline standid=$this->id, note=$note";
+        dol_syslog(get_class($this).$logtext, LOG_DEBUG);
+
+
+        $note = trim($note);
+
+        $this->db->begin();
+
+        // Insert line
+        $this->line = new StandLine($this->db);
+
+        $this->line->context = $this->context;
+
+        $this->line->fk_stand = $this->id;
+        $this->line->note = $note;
+        $this->line->fk_user = $fk_user;
+
+        $result = $this->line->insert($user);
+        if ($result > 0) {
+            $this->db->commit();
+            return $this->line->id;
+        } else {
+            $this->error = $this->line->error;
+            dol_syslog(get_class($this)."::addline error=".$this->error, LOG_ERR);
+            $this->db->rollback();
+            return -2;
+        }
+    }
+
+    /**
+     *  Update a line in database
+     *
+     *  @param    	int				$rowid            	Id of line to update
+     *  @param    	string			$note             	Note of line
+     * 	@param		int				$notrigger			disable line update trigger
+     *  @return   	int              					< 0 if KO, > 0 if OK
+     */
+    public function updateline($rowid, $note, $fk_user = -1, $notrigger = 0)
+    {
+        global $conf, $mysoc, $langs, $user;
+
+        dol_syslog(get_class($this)."::updateline id=$rowid, note=$note");
+
+        $this->db->begin();
+
+        //Fetch current line from the database and then clone the object and set it in $oldline property
+        $line = new StandLine($this->db);
+        $line->fetch($rowid);
+
+        $staticline = clone $line;
+
+        $line->oldline = $staticline;
+        $this->line = $line;
+        $this->line->context = $this->context;
+
+        $this->line->id = $rowid;
+        $this->line->note = $note;
+        $this->line->fk_user = $fk_user;
+
+        $result = $this->line->update($user, $notrigger);
+        if ($result > 0) {
+            $this->db->commit();
+            return $result;
+        } else {
+            $this->error = $this->line->error;
+
+            $this->db->rollback();
+            return -1;
+        }
+    }
+
+    /**
+     *  Delete a stand line
+     *
+     *	@param      User	$user		User object
+     *  @param      int		$lineid		Id of line to delete
+     *  @return     int        		 	>0 if OK, 0 if nothing to do, <0 if KO
+     */
+    public function deleteline($user = null, $lineid = 0)
+    {
+        $this->db->begin();
+
+        $line = new StandLine($this->db);
+
+        // For triggers
+        if ($line->fetch($lineid) > 0) {
+
+            // Memorize previous line for triggers
+            $staticline = clone $line;
+            $line->oldline = $staticline;
+
+            if ($line->delete($user) > 0) {
+                $this->db->commit();
+                return 1;
+            } else {
+                $this->db->rollback();
+                $this->error = $line->error;
+                return -1;
+            }
+        } else {
+            $this->db->rollback();
+            return 0;
+        }
+    }
+
 
     /**
 	 *  Delete a gestion from database (if not used)
@@ -950,4 +1274,274 @@ class Stand extends CommonObject
 			return -1;
 		}
 	}
+}
+
+/**
+ *  Class to manage stand lines
+ */
+class StandLine extends CommonObjectLine
+{
+    /**
+     * @var string ID to identify managed object
+     */
+    public $element = 'standdet';
+
+    public $table_element = 'standdet';
+
+    public $oldline;
+
+    /**
+     * Id of parent stand
+     * @var int
+     */
+    public $fk_stand;
+
+    /**
+     * @var string Note
+     */
+    public $note;
+
+    /**
+     * User
+     * @var int
+     */
+    public $fk_user = 0;
+
+    /**
+     * Creation date
+     * @var int
+     */
+    public $datec;
+
+    /**
+     * Author id
+     * @var int
+     */
+    public $user_author_id = 0;
+
+    /**
+     * Timestamp
+     * @var int
+     */
+    public $tms;
+
+    /**
+     * Current user
+     * @var User
+     */
+    public $user = null;
+
+    /**
+     *      Constructor
+     *
+     *      @param     DoliDB	$db      handler d'acces base de donnee
+     */
+    public function __construct($db)
+    {
+        $this->db = $db;
+    }
+
+    /**
+     *  Load line order
+     *
+     *  @param  int		$rowid          Id line order
+     *  @return	int						<0 if KO, >0 if OK
+     */
+    public function fetch($rowid)
+    {
+        $sql = 'SELECT cd.rowid, cd.fk_stand, cd.fk_user, cd.user_author_id, cd.note, cd.datec, cd.tms';
+        $sql .= ' FROM '.MAIN_DB_PREFIX.'standdet as cd';
+        $sql .= ' WHERE cd.rowid = '.((int) $rowid);
+        $result = $this->db->query($sql);
+        if ($result) {
+            $objp = $this->db->fetch_object($result);
+            $this->rowid            = $objp->rowid;
+            $this->id               = $objp->rowid;
+            $this->fk_stand          = $objp->fk_stand;
+            $this->note            = $objp->note;
+            $this->fk_user          = $objp->fk_user;
+
+            $this->user = new User($this->db);
+            $this->user->fetch($this->fk_user);
+
+            $this->datec 			= $this->db->jdate($objp->datec);
+            $this->tms 			    = $this->db->jdate($objp->tms);
+
+            $this->db->free($result);
+
+            return 1;
+        } else {
+            $this->error = $this->db->lasterror();
+            return -1;
+        }
+    }
+
+    /**
+     * 	Delete line in database
+     *
+     *	@param      User	$user        	User that modify
+     *  @param      int		$notrigger	    0=launch triggers after, 1=disable triggers
+     *	@return	 int  <0 si ko, >0 si ok
+     */
+    public function delete(User $user, $notrigger = 0)
+    {
+        global $conf, $langs;
+
+        $error = 0;
+
+        if (empty($this->id) && !empty($this->rowid)) {		// For backward compatibility
+            $this->id = $this->rowid;
+        }
+
+
+        $this->db->begin();
+
+        $sql = 'DELETE FROM '.MAIN_DB_PREFIX."standdet WHERE rowid = ".((int) $this->id);
+
+        dol_syslog("StandLine::delete", LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+
+            if (!$error && !$notrigger) {
+                // Call trigger
+                $result = $this->call_trigger('LINESTAND_DELETE', $user);
+                if ($result < 0) {
+                    $error++;
+                }
+                // End call triggers
+            }
+
+            if (!$error) {
+                $this->db->commit();
+                return 1;
+            }
+
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this)."::delete ".$errmsg, LOG_ERR);
+                $this->error .= ($this->error ? ', '.$errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->error = $this->db->lasterror();
+            return -1;
+        }
+    }
+
+    /**
+     *	Insert line into database
+     *
+     *	@param      User	$user        	User that modify
+     *	@param      int		$notrigger		1 = disable triggers
+     *	@return		int						<0 if KO, >0 if OK
+     */
+    public function insert($user = null, $notrigger = 0)
+    {
+        global $langs, $conf;
+
+        $error = 0;
+
+        dol_syslog(get_class($this)."::insert");
+
+        $this->db->begin();
+
+        $this->datec = dol_now();
+        $this->user_author_id = $user ? $user->id : 0;
+
+        // Insertion dans base de la ligne
+        $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'standdet (fk_stand, note, fk_user, user_author_id, datec, tms)';
+        $sql .= " VALUES (".$this->fk_stand.",";
+        $sql .= " ".(!empty($this->note) ? "'".$this->db->escape($this->note)."'" : "null").",";
+        $sql .= " ".(!empty($this->fk_user) ? $this->fk_user : "0").",";
+        $sql .= " ".(!empty($this->user_author_id) ? $this->user_author_id : "0").",";
+        $sql .= " '".$this->db->idate(dol_now())."',";
+        $sql .= " '".$this->db->idate(dol_now())."'";
+        $sql .= ')';
+
+        dol_syslog(get_class($this)."::insert", LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX.'standdet');
+            $this->rowid = $this->id;
+
+            if (!$error && !$notrigger) {
+                // Call trigger
+                $result = $this->call_trigger('LINESTAND_INSERT', $user);
+                if ($result < 0) {
+                    $error++;
+                }
+                // End call triggers
+            }
+
+            if (!$error) {
+                $this->db->commit();
+                return 1;
+            }
+
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this)."::insert ".$errmsg, LOG_ERR);
+                $this->error .= ($this->error ? ', '.$errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->error = $this->db->error();
+            $this->db->rollback();
+            return -2;
+        }
+    }
+
+    /**
+     *	Update the line object into db
+     *
+     *	@param      User	$user        	User that modify
+     *	@param      int		$notrigger		1 = disable triggers
+     *	@return		int		<0 si ko, >0 si ok
+     */
+    public function update(User $user, $notrigger = 0)
+    {
+        global $conf, $langs;
+
+        $error = 0;
+
+        $this->db->begin();
+
+        // Mise a jour ligne en base
+        $sql = "UPDATE ".MAIN_DB_PREFIX."standdet SET";
+        $sql .= " note=".(!empty($this->note) ? "'".$this->db->escape($this->note)."'" : "null");
+        $sql .= " , fk_user=".(!empty($this->fk_user) ? $this->fk_user : "0");
+        $sql .= " , tms='".$this->db->idate(dol_now())."'";
+        $sql .= " WHERE rowid = ".((int) $this->rowid);
+
+        dol_syslog(get_class($this)."::update", LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+
+
+            if (!$error && !$notrigger) {
+                // Call trigger
+                $result = $this->call_trigger('LINESTAND_UPDATE', $user);
+                if ($result < 0) {
+                    $error++;
+                }
+                // End call triggers
+            }
+
+            if (!$error) {
+                $this->db->commit();
+                return 1;
+            }
+
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this)."::update ".$errmsg, LOG_ERR);
+                $this->error .= ($this->error ? ', '.$errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->error = $this->db->error();
+            $this->db->rollback();
+            return -2;
+        }
+    }
 }

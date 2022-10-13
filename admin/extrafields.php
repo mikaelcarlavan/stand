@@ -73,7 +73,7 @@ dol_fiche_head(
 	'attributes',
 	$langs->trans("Stands"),
 	0,
-	'stand@stand'
+	'stand2@stand'
 );
 
 

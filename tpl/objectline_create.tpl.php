@@ -35,8 +35,8 @@
 
 // Protection to avoid direct call of template
 if (empty($object) || !is_object($object)) {
-	print "Error: this template page cannot be called directly as an URL";
-	exit;
+    print "Error: this template page cannot be called directly as an URL";
+    exit;
 }
 
 global $forcechargementhowtitlelines;
@@ -47,47 +47,67 @@ global $forcechargementhowtitlelines;
 print "<!-- BEGIN PHP TEMPLATE objectline_create.tpl.php -->\n";
 $nolinesbefore = (count($this->lines) == 0 || $forcechargementhowtitlelines);
 if ($nolinesbefore) {
-	?>
-	<tr class="liste_titre<?php echo $nolinesbefore ? '' : ' liste_titre_add_'; ?> nodrag nodrop">
-		<?php if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) { ?>
-			<td class="linecolnum center"></td>
-		<?php } ?>
-		<td class="linecoldescription minwidth500imp">
-			<div id="add"></div><span class="hideonsmartphone"><?php echo $langs->trans('StandAddBike'); ?></span>
-		</td>
+    ?>
+    <tr class="liste_titre<?php echo $nolinesbefore ? '' : ' liste_titre_add_'; ?> nodrag nodrop">
+        <?php if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) { ?>
+            <td class="linecolnum center"></td>
+        <?php } ?>
+        <td class="linecoldescription minwidth500imp">
+            <div id="add"></div><span class="hideonsmartphone"><?php echo $langs->trans('StandAddTag'); ?></span>
+        </td>
+        <td class="linecolfkuser right"><?php echo $langs->trans('BikeUser'); ?></td>
+        <td class="linecoldatec right"><?php echo $langs->trans('BikeAddDate'); ?></td>
         <td class="linecoledit" colspan="3">&nbsp;</td>
-	</tr>
-	<?php
+    </tr>
+    <?php
 }
 ?>
-<tr class="pair nodrag nodrop nohoverpair<?php echo $nolinesbefore ? '' : ' liste_titre_create'; ?>">
-	<?php
-	// Adds a line numbering column
-	if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
-		echo '<td class="nobottom linecolnum center"></td>';
-	}
-	?>
-	<td class="nobottom linecoldescription minwidth500imp">
-		<?php
-
-		if (is_object($hookmanager)) {
-			$parameters = array();
-			$reshook = $hookmanager->executeHooks('formCreateProductOptions', $parameters, $object, $action);
-			if (!empty($hookmanager->resPrint)) {
-				print $hookmanager->resPrint;
-			}
-		}
-
-        if (!empty($conf->bike->enabled)) {
-            print $bikeform->select_bike('', 'fk_bike');
+    <tr class="pair nodrag nodrop nohoverpair<?php echo $nolinesbefore ? '' : ' liste_titre_create'; ?>">
+        <?php
+        // Adds a line numbering column
+        if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
+            echo '<td class="nobottom linecolnum center"></td>';
         }
         ?>
-	</td>
+        <td class="nobottom linecoldescription minwidth500imp">
+            <?php
 
-	<td class="nobottom linecoledit center valignmiddle" colspan="3">
-		<input type="submit" class="button reposition" value="<?php echo $langs->trans('Add'); ?>" name="addline" id="addline">
-	</td>
-</tr>
+            if (is_object($hookmanager)) {
+                $parameters = array();
+                $reshook = $hookmanager->executeHooks('formCreateProductOptions', $parameters, $object, $action);
+                if (!empty($hookmanager->resPrint)) {
+                    print $hookmanager->resPrint;
+                }
+            }
+
+            // Editor wysiwyg
+            require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+            $nbrows = ROWS_2;
+            $enabled = (!empty($conf->global->FCKEDITOR_ENABLE_DETAILS) ? $conf->global->FCKEDITOR_ENABLE_DETAILS : 0);
+            if (!empty($conf->global->MAIN_INPUT_DESC_HEIGHT)) {
+                $nbrows = $conf->global->MAIN_INPUT_DESC_HEIGHT;
+            }
+            $toolbarname = 'dolibarr_details';
+            if (!empty($conf->global->FCKEDITOR_ENABLE_DETAILS_FULL)) {
+                $toolbarname = 'dolibarr_notes';
+            }
+            $doleditor = new DolEditor('note', GETPOST('note', 'restricthtml'), '', (empty($conf->global->MAIN_DOLEDITOR_HEIGHT) ? 100 : $conf->global->MAIN_DOLEDITOR_HEIGHT), $toolbarname, '', false, true, $enabled, $nbrows, '98%');
+            $doleditor->Create();
+            ?>
+        </td>
+
+        <td class="nobottom linecolfkuser right">
+            <?php print $form->select_dolusers(GETPOST('fk_user', 'int'),  'fk_user', 1); ?>
+        </td>
+
+        <td class="nobottom linecoldatec right">
+            &nbsp;
+        </td>
+
+        <td class="nobottom linecoledit center valignmiddle" colspan="3">
+            <input type="submit" class="button reposition" value="<?php echo $langs->trans('Add'); ?>" name="addline" id="addline">
+        </td>
+    </tr>
 
 <?php
 print "<!-- END PHP TEMPLATE objectline_create.tpl.php -->\n";

@@ -62,7 +62,7 @@ class StandForm
         }
         foreach ($stands as $id => $stand)
         {
-            $select .= '<option value="'.$id.'" '.($id == $selected ? 'selected="selected"' : '').'>'.$stand->name.'</option>';
+            $select .= '<option value="'.$id.'" '.($id == $selected ? 'selected="selected"' : '').'>'.$stand->ref.'</option>';
         }
         
         $select .= '</select>';

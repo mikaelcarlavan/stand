@@ -16,7 +16,7 @@
 --
 -- ============================================================================
 
-DROP TABLE `llx_standdet`;
+-- DROP TABLE `llx_standdet`;
 
 CREATE TABLE IF NOT EXISTS `llx_standdet`
 (

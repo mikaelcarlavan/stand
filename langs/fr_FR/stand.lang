@@ -83,6 +83,7 @@ StandBike = Vélo
 StandTag = Dégradation
 StandAddBike = Ajouter un vélo
 StandLongitudeLatitude = Latitude/longitude
+StandLatitudeLongitude = Latitude/longitude
 DateCreation = Date de création
 DateModificationShort = Date de modif.
 UserAuthorId = Utilisateur

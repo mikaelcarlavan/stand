@@ -343,8 +343,8 @@ if ($action == 'create' && $user->rights->stand->creer)
 
     // Latitude/Longitude
     print '<tr><td>' . $langs->trans('StandLatitudeLongitude') . '</td><td>';
-    print '<input type="text" size="30" class="flat" name="latitude" value="'.GETPOST('latitude').'">';
-    print '&nbsp;<input type="text"  size="60" class="flat" name="longitude" value="'.GETPOST('longitude').'">';
+    print '<input type="text" size="30" class="flat" id="latitude" name="latitude" value="'.GETPOST('latitude').'">';
+    print '&nbsp;<input type="text" size="30" class="flat" id="longitude" name="longitude" value="'.GETPOST('longitude').'">';
     print '</td></tr>';
 
 	// Other attributes
@@ -356,6 +356,10 @@ if ($action == 'create' && $user->rights->stand->creer)
 	}
 
 	print '</table>';
+
+    print '<div id="stand-map" class="map" style="width:100%; height:400px;"></div>';
+
+    print '</div>';
 
 	dol_fiche_end();
 
@@ -464,7 +468,7 @@ if ($action == 'create' && $user->rights->stand->creer)
 
         print '<tr><td>';
         print '<table class="nobordernopadding" width="100%"><tr><td>';
-        print $langs->trans('StandLongitudeLatitude');
+        print $langs->trans('StandLatitudeLongitude');
         print '</td>';
         if ($action != 'editgps')
             print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editgps&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetLicencePlate'), 1) . '</a></td>';
@@ -630,53 +634,54 @@ if ($action == 'create' && $user->rights->stand->creer)
         print '</div>';
         print '</div>';
 
-        ?>
-
-        <script type="text/javascript">
-            var lat = <?php echo $object->latitude ?: (!empty($conf->global->VELOMA_MAP_LATITUDE) ? $conf->global->VELOMA_MAP_LATITUDE : 48.852969); ?>;
-            var lon = <?php echo $object->longitude ?: (!empty($conf->global->VELOMA_MAP_LONGITUDE) ? $conf->global->VELOMA_MAP_LONGITUDE : 2.349903); ?>;
-
-            var map = null;
-            var marker = null;
-
-            function initMap() {
-                map = L.map('stand-map').setView([lat, lon], <?php echo !empty($conf->global->VELOMA_MAP_ZOOM) ? $conf->global->VELOMA_MAP_ZOOM : 13; ?>);
-                L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-                   attribution: 'Données &copy; Contributeurs <a href="http://openstreetmap.org">OpenStreetMap</a> | <a href="https://creativecommons.org/licenses/by/2.0/">CC-BY</a>',
-                   minZoom: 1,
-                   maxZoom: 20
-               }).addTo(map);
-
-                <?php if ($action == 'editgps'): ?>
-                map.on('click', onMapClick);
-                <?php endif; ?>
-
-                <?php if ($object->latitude && $object->longitude): ?>
-                marker = L.marker([<?php echo $object->latitude; ?>, <?php echo $object->longitude; ?>]);
-                marker.addTo(map);
-                <?php endif; ?>
-            }
-
-            function onMapClick(e) {
-                $("#latitude").val(e.latlng.lat);
-                $("#longitude").val(e.latlng.lng);
-
-                if (marker) {
-                     marker.setLatLng(e.latlng);
-                } else {
-                     marker = L.marker(e.latlng);
-                     marker.addTo(map);
-                }
-            }
-
-            $(document).ready(function() {
-                initMap();
-            });
-        </script>
-        <?php
 	}
 }
 
+?>
+
+<script type="text/javascript">
+    var lat = <?php echo $object->latitude ?: (!empty($conf->global->VELOMA_MAP_LATITUDE) ? $conf->global->VELOMA_MAP_LATITUDE : 48.852969); ?>;
+    var lon = <?php echo $object->longitude ?: (!empty($conf->global->VELOMA_MAP_LONGITUDE) ? $conf->global->VELOMA_MAP_LONGITUDE : 2.349903); ?>;
+
+    var map = null;
+    var marker = null;
+
+    function initMap() {
+        map = L.map('stand-map').setView([lat, lon], <?php echo !empty($conf->global->VELOMA_MAP_ZOOM) ? $conf->global->VELOMA_MAP_ZOOM : 13; ?>);
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            attribution: 'Données &copy; Contributeurs <a href="http://openstreetmap.org">OpenStreetMap</a> | <a href="https://creativecommons.org/licenses/by/2.0/">CC-BY</a>',
+            minZoom: 1,
+            maxZoom: 20
+        }).addTo(map);
+
+        <?php if ($action == 'editgps' || $action == 'create'): ?>
+        map.on('click', onMapClick);
+        <?php endif; ?>
+
+        <?php if ($object->latitude && $object->longitude): ?>
+        marker = L.marker([<?php echo $object->latitude; ?>, <?php echo $object->longitude; ?>]);
+        marker.addTo(map);
+        <?php endif; ?>
+    }
+
+    function onMapClick(e) {
+        $("#latitude").val(e.latlng.lat);
+        $("#longitude").val(e.latlng.lng);
+
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng);
+            marker.addTo(map);
+        }
+    }
+
+    $(document).ready(function() {
+        initMap();
+    });
+</script>
+
+<?php
 // End of page
 llxFooter();
 $db->close();

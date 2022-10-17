@@ -72,6 +72,7 @@ StandCard = Station
 Info = Suivi
 Ref = Réf.
 StandActive = Actif
+StandInactive = Inactif
 StandName = Nom
 StandDescription = Description
 StandAddress = Adresse
